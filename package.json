@@ -1,0 +1,26 @@
+{
+  "name": "nuraithm-clinical-system",
+  "version": "2.0.0",
+  "description": "AI-powered clinical handover system using ISBAR framework with PocketBase backend",
+  "main": "index.html",
+  "scripts": {
+    "dev": "live-server --port=3000 --host=localhost",
+    "build": "echo 'Build process would go here'",
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [
+    "medical",
+    "healthcare",
+    "clinical",
+    "handover",
+    "isbar",
+    "ai",
+    "nursing",
+    "pocketbase",
+    "deepseek"
+  ],
+  "author": "Ahmed Khaled",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
