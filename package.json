@@ -1,26 +1,25 @@
 {
   "name": "nuraithm-clinical-system",
   "version": "2.0.0",
-  "description": "AI-powered clinical handover system using ISBAR framework with PocketBase backend",
-  "main": "index.html",
   "scripts": {
-    "dev": "live-server --port=3000 --host=localhost",
-    "build": "echo 'Build process would go here'",
-    "test": "echo 'No tests specified'"
+    "dev": "netlify dev",
+    "build": "echo 'No build required'",
+    "deploy": "netlify deploy --prod"
   },
-  "keywords": [
-    "medical",
-    "healthcare",
-    "clinical",
-    "handover",
-    "isbar",
-    "ai",
-    "nursing",
-    "pocketbase",
-    "deepseek"
-  ],
-  "author": "Ahmed Khaled",
-  "license": "MIT",
-  "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "@netlify/functions": "^1.6.0"
+  },
+  "main": "app.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darrrwish/nuraithm-clinical-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/darrrwish/nuraithm-clinical-system/issues"
+  },
+  "homepage": "https://github.com/darrrwish/nuraithm-clinical-system#readme",
+  "description": ""
 }

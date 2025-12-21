@@ -1037,8 +1037,7 @@ const NuraithmApp = (function() {
                     
                 case 'careplan':
                     showNotification(translate('جاري إنشاء خطة الرعاية...', 'Creating care plan...'), 'info');
-                    const carePlan = await DeepSeekService.generateCarePlan(patient, state.aiLang);
-                    if (carePlan && !carePlan.requiresApiKey) {
+                    const carePlan = await DeepSeekService.generateCarePlan?.(patient, state.aiLang);                    if (carePlan && !carePlan.requiresApiKey) {
                         showNotification(translate('تم إنشاء خطة الرعاية', 'Care plan generated'), 'success');
                         showCarePlanModal(carePlan, patient.name);
                     }
@@ -1046,7 +1045,7 @@ const NuraithmApp = (function() {
                     
                 case 'shift':
                     showNotification(translate('جاري إنشاء ملخص الشفت...', 'Creating shift summary...'), 'info');
-                    const shiftSummary = await DeepSeekService.generateShiftSummary(patient, state.aiLang);
+                    const shiftSummary = await DeepSeekService.generateShiftSummary?.(patient, state.aiLang);
                     if (shiftSummary) {
                         showNotification(translate('تم إنشاء ملخص الشفت', 'Shift summary generated'), 'success');
                         showShiftSummaryModal(shiftSummary, patient.name);
@@ -1055,7 +1054,7 @@ const NuraithmApp = (function() {
                     
                 case 'medtable':
                     showNotification(translate('جاري تحليل الأدوية...', 'Analyzing medications...'), 'info');
-                    const medTable = await DeepSeekService.generateMedicationAnalysis(patient, state.aiLang);
+                    const medTable = await DeepSeekService.generateMedicationTable?.(patient, state.aiLang);
                     if (medTable && !medTable.requiresApiKey) {
                         showNotification(translate('تم إنشاء جدول الأدوية', 'Medication table generated'), 'success');
                         showMedTableModal(medTable, patient.name);
@@ -1064,7 +1063,7 @@ const NuraithmApp = (function() {
                     
                 case 'report':
                     showNotification(translate('جاري إنشاء التقرير...', 'Generating report...'), 'info');
-                    const report = await DeepSeekService.generatePatientReport(patient, state.aiLang);
+                    const report = await DeepSeekService.generatePatientReport?.(patient, state.aiLang);
                     if (report) {
                         showNotification(translate('تم إنشاء التقرير', 'Report generated'), 'success');
                         showReportModal(report, patient.name);
@@ -1087,7 +1086,7 @@ const NuraithmApp = (function() {
 
         try {
             showNotification(translate('جاري تحليل المخاطر...', 'Analyzing risks...'), 'info');
-            const alerts = await DeepSeekService.generateClinicalAlerts(patient, state.aiLang);
+            const alerts = await DeepSeekService.generateClinicalAlerts?.(patient, state.aiLang);
             
             if (alerts && Array.isArray(alerts)) {
                 // Save alerts to PocketBase
@@ -2237,13 +2236,15 @@ const NuraithmApp = (function() {
     }
 
     // Public API
-    return {
-        init,
-        state,
-        translate,
-        showNotification,
-        generateAIAlerts
-    };
+   return {
+    init,
+    state,
+    translate,
+    showNotification,
+    generateAIAlerts,
+    render, // ← أضف هذا السطر!
+    
+};
 })();
 
 // Make app globally available
