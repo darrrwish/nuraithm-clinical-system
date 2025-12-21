@@ -1,4 +1,4 @@
-// PocketBase Service
+// PocketBase Service - المحدث
 const PocketBaseService = (function() {
     const pb = window.PB;
     
@@ -30,36 +30,21 @@ const PocketBaseService = (function() {
                 console.error('Update profile error:', error);
                 throw error;
             }
-        },
-        
-        // Change password
-        async changePassword(oldPassword, newPassword, confirmPassword) {
-            try {
-                const user = pb.authStore.model;
-                return await pb.collection('users').update(user.id, {
-                    oldPassword,
-                    password: newPassword,
-                    passwordConfirm: confirmPassword
-                });
-            } catch (error) {
-                console.error('Change password error:', error);
-                throw error;
-            }
         }
     };
     
     // Patients Management
     const PatientService = {
         // Get all patients for current user
-        async getPatients(filter = {}) {
+        async getPatients() {
             try {
-                // Send with auth token in headers
+                const user = UserService.getCurrentUser();
                 return await pb.collection('patients').getFullList({
+                    filter: `user = "${user.id}"`,
                     sort: '-created'
                 });
             } catch (error) {
                 console.error('Get patients error:', error);
-                // Return empty array instead of throwing error
                 return [];
             }
         },
@@ -67,7 +52,10 @@ const PocketBaseService = (function() {
         // Get single patient
         async getPatient(id) {
             try {
-                return await pb.collection('patients').getOne(id);
+                const user = UserService.getCurrentUser();
+                return await pb.collection('patients').getOne(id, {
+                    filter: `user = "${user.id}"`
+                });
             } catch (error) {
                 console.error('Get patient error:', error);
                 throw error;
@@ -77,7 +65,7 @@ const PocketBaseService = (function() {
         // Create patient
         async createPatient(data) {
             try {
-                const user = pb.authStore.model;
+                const user = UserService.getCurrentUser();
                 const patientData = {
                     ...data,
                     user: user.id
@@ -92,6 +80,13 @@ const PocketBaseService = (function() {
         // Update patient
         async updatePatient(id, data) {
             try {
+                const user = UserService.getCurrentUser();
+                // تأكد من أن المستخدم يملك السجل
+                await pb.collection('patients').getOne(id, {
+                    filter: `user = "${user.id}"`
+                });
+                
+                // تحديث البيانات
                 return await pb.collection('patients').update(id, data);
             } catch (error) {
                 console.error('Update patient error:', error);
@@ -102,22 +97,15 @@ const PocketBaseService = (function() {
         // Delete patient
         async deletePatient(id) {
             try {
+                const user = UserService.getCurrentUser();
+                // تأكد من أن المستخدم يملك السجل
+                await pb.collection('patients').getOne(id, {
+                    filter: `user = "${user.id}"`
+                });
+                
                 return await pb.collection('patients').delete(id);
             } catch (error) {
                 console.error('Delete patient error:', error);
-                throw error;
-            }
-        },
-        
-        // Search patients
-        async searchPatients(query) {
-            try {
-                return await pb.collection('patients').getList(1, 50, {
-                    filter: `name ~ "${query}" || fileNumber ~ "${query}" || diagnosis ~ "${query}"`,
-                    sort: '-created'
-                });
-            } catch (error) {
-                console.error('Search patients error:', error);
                 throw error;
             }
         }
@@ -126,9 +114,11 @@ const PocketBaseService = (function() {
     // Alerts Management
     const AlertService = {
         // Get all alerts for current user
-        async getAlerts(filter = {}) {
+        async getAlerts() {
             try {
+                const user = UserService.getCurrentUser();
                 return await pb.collection('alerts').getFullList({
+                    filter: `user = "${user.id}"`,
                     sort: '-created'
                 });
             } catch (error) {
@@ -140,7 +130,7 @@ const PocketBaseService = (function() {
         // Create alert
         async createAlert(data) {
             try {
-                const user = pb.authStore.model;
+                const user = UserService.getCurrentUser();
                 const alertData = {
                     ...data,
                     user: user.id
@@ -155,6 +145,12 @@ const PocketBaseService = (function() {
         // Mark alert as read
         async markAsRead(id) {
             try {
+                const user = UserService.getCurrentUser();
+                // تأكد من أن المستخدم يملك السجل
+                await pb.collection('alerts').getOne(id, {
+                    filter: `user = "${user.id}"`
+                });
+                
                 return await pb.collection('alerts').update(id, { read: true });
             } catch (error) {
                 console.error('Mark alert read error:', error);
@@ -165,6 +161,12 @@ const PocketBaseService = (function() {
         // Delete alert
         async deleteAlert(id) {
             try {
+                const user = UserService.getCurrentUser();
+                // تأكد من أن المستخدم يملك السجل
+                await pb.collection('alerts').getOne(id, {
+                    filter: `user = "${user.id}"`
+                });
+                
                 return await pb.collection('alerts').delete(id);
             } catch (error) {
                 console.error('Delete alert error:', error);
@@ -175,8 +177,9 @@ const PocketBaseService = (function() {
         // Clear all read alerts
         async clearReadAlerts() {
             try {
+                const user = UserService.getCurrentUser();
                 const readAlerts = await pb.collection('alerts').getFullList({
-                    filter: `read = true`
+                    filter: `user = "${user.id}" && read = true`
                 });
                 
                 for (const alert of readAlerts) {
@@ -194,9 +197,11 @@ const PocketBaseService = (function() {
     // Todos Management
     const TodoService = {
         // Get all todos for current user
-        async getTodos(filter = {}) {
+        async getTodos() {
             try {
+                const user = UserService.getCurrentUser();
                 return await pb.collection('todos').getFullList({
+                    filter: `user = "${user.id}"`,
                     sort: '-created'
                 });
             } catch (error) {
@@ -208,7 +213,7 @@ const PocketBaseService = (function() {
         // Create todo
         async createTodo(data) {
             try {
-                const user = pb.authStore.model;
+                const user = UserService.getCurrentUser();
                 const todoData = {
                     ...data,
                     user: user.id
@@ -223,6 +228,12 @@ const PocketBaseService = (function() {
         // Update todo
         async updateTodo(id, data) {
             try {
+                const user = UserService.getCurrentUser();
+                // تأكد من أن المستخدم يملك السجل
+                await pb.collection('todos').getOne(id, {
+                    filter: `user = "${user.id}"`
+                });
+                
                 return await pb.collection('todos').update(id, data);
             } catch (error) {
                 console.error('Update todo error:', error);
@@ -233,6 +244,12 @@ const PocketBaseService = (function() {
         // Delete todo
         async deleteTodo(id) {
             try {
+                const user = UserService.getCurrentUser();
+                // تأكد من أن المستخدم يملك السجل
+                await pb.collection('todos').getOne(id, {
+                    filter: `user = "${user.id}"`
+                });
+                
                 return await pb.collection('todos').delete(id);
             } catch (error) {
                 console.error('Delete todo error:', error);
@@ -243,7 +260,12 @@ const PocketBaseService = (function() {
         // Toggle todo completion
         async toggleTodo(id) {
             try {
-                const todo = await pb.collection('todos').getOne(id);
+                const user = UserService.getCurrentUser();
+                // تأكد من أن المستخدم يملك السجل
+                const todo = await pb.collection('todos').getOne(id, {
+                    filter: `user = "${user.id}"`
+                });
+                
                 return await pb.collection('todos').update(id, {
                     completed: !todo.completed
                 });
@@ -254,46 +276,72 @@ const PocketBaseService = (function() {
         }
     };
     
-    // File Upload Service
-    const FileService = {
-        // Upload file
-        async uploadFile(file, collectionName, recordId, fieldName = 'file') {
-            try {
-                const formData = new FormData();
-                formData.append(fieldName, file);
-                
-                const record = await pb.collection(collectionName).update(recordId, formData);
-                return record;
-            } catch (error) {
-                console.error('Upload file error:', error);
-                throw error;
-            }
-        },
-        
-        // Get file URL
-        getFileUrl(record, fileName) {
-            return pb.files.getUrl(record, fileName);
-        }
-    };
-    
     // Realtime subscriptions
     const RealtimeService = {
         subscribeToPatients(callback) {
-            return pb.collection('patients').subscribe('*', callback);
+            const user = UserService.getCurrentUser();
+            return pb.collection('patients').subscribe('*', (e) => {
+                // تصفية الأحداث حسب المستخدم
+                if (e.record.user === user.id) {
+                    callback(e);
+                }
+            });
         },
         
         subscribeToAlerts(callback) {
-            return pb.collection('alerts').subscribe('*', callback);
+            const user = UserService.getCurrentUser();
+            return pb.collection('alerts').subscribe('*', (e) => {
+                // تصفية الأحداث حسب المستخدم
+                if (e.record.user === user.id) {
+                    callback(e);
+                }
+            });
         },
         
         subscribeToTodos(callback) {
-            return pb.collection('todos').subscribe('*', callback);
-        },
-        
-        unsubscribe(subscription) {
-            subscription.unsubscribe();
+            const user = UserService.getCurrentUser();
+            return pb.collection('todos').subscribe('*', (e) => {
+                // تصفية الأحداث حسب المستخدم
+                if (e.record.user === user.id) {
+                    callback(e);
+                }
+            });
         }
     };
+    
+    // Initialize service
+    async function initialize() {
+        try {
+            // Check if user is authenticated
+            if (!UserService.isAuthenticated()) {
+                console.log('User not authenticated');
+                return { patients: [], alerts: [], todos: [] };
+            }
+            
+            // Load data in parallel
+            const [patients, alerts, todos] = await Promise.all([
+                PatientService.getPatients(),
+                AlertService.getAlerts(),
+                TodoService.getTodos()
+            ]);
+            
+            console.log('Data loaded:', { 
+                patients: patients.length, 
+                alerts: alerts.length, 
+                todos: todos.length 
+            });
+            
+            return { patients, alerts, todos };
+            
+        } catch (error) {
+            console.error('Service initialization error:', error);
+            return {
+                patients: [],
+                alerts: [],
+                todos: []
+            };
+        }
+    }
     
     // Public API
     return {
@@ -301,51 +349,8 @@ const PocketBaseService = (function() {
         PatientService,
         AlertService,
         TodoService,
-        FileService,
         RealtimeService,
-        
-        // Helper functions
-        get pb() {
-            return pb;
-        },
-        
-        // Initialize service
-        async initialize() {
-            try {
-                // Check if user is authenticated
-                if (!this.UserService.isAuthenticated()) {
-                    throw new Error('User not authenticated');
-                }
-                
-                // Load initial data
-                const [patients, alerts, todos] = await Promise.all([
-                    this.PatientService.getPatients(),
-                    this.AlertService.getAlerts(),
-                    this.TodoService.getTodos()
-                ]);
-                
-                // Filter data by current user (client-side filtering)
-                const user = this.UserService.getCurrentUser();
-                const filteredPatients = patients.filter(p => p.user === user.id);
-                const filteredAlerts = alerts.filter(a => a.user === user.id);
-                const filteredTodos = todos.filter(t => t.user === user.id);
-                
-                return {
-                    patients: filteredPatients,
-                    alerts: filteredAlerts,
-                    todos: filteredTodos
-                };
-                
-            } catch (error) {
-                console.error('Service initialization error:', error);
-                // Return empty data instead of throwing error
-                return {
-                    patients: [],
-                    alerts: [],
-                    todos: []
-                };
-            }
-        }
+        initialize
     };
 })();
 
