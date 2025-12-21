@@ -677,79 +677,124 @@ if (target.closest('[data-add-radiology]')) {
         const completedTodos = state.todos.filter(t => t.completed);
         
         return `
-            <section class="mt-8">
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow">
-                    <div class="p-6 border-b flex justify-between items-center">
-                        <h3 class="text-xl font-bold">📋 قائمة المهام</h3>
-                        <button data-add-task class="px-4 py-2 bg-primary text-white rounded-lg text-sm">
-                            + إضافة مهمة
-                        </button>
-                    </div>
-                    
-                    <div class="p-6">
-                        ${state.todos.length === 0 ? `
-                            <div class="text-center py-8">
-                                <p class="text-gray-500 mb-4">لا توجد مهام حالياً</p>
-                                <button data-add-task class="px-6 py-2 bg-primary text-white rounded-lg">
-                                    إضافة أول مهمة
-                                </button>
-                            </div>
-                        ` : `
-                            <div class="space-y-3">
-                                ${activeTodos.map(todo => `
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg" data-task-id="${todo.id}">
-                                        <div class="flex items-center gap-3">
-                                            <input type="checkbox" 
-                                                   class="h-5 w-5"
-                                                   ${todo.completed ? 'checked' : ''}
-                                                   onchange="toggleTask('${todo.id}')">
-                                            <div>
-                                                <p class="${todo.completed ? 'line-through text-gray-500' : ''}">
-                                                    ${todo.text}
-                                                </p>
-                                                ${todo.patientName ? `
-                                                    <p class="text-sm text-primary mt-1">
-                                                        👤 ${todo.patientName}
-                                                    </p>
-                                                ` : ''}
-                                                ${todo.dueDate ? `
-                                                    <p class="text-xs text-gray-500 mt-1">
-                                                        📅 ${new Date(todo.dueDate).toLocaleDateString('ar-EG')}
-                                                    </p>
-                                                ` : ''}
-                                            </div>
-                                        </div>
-                                        <button onclick="deleteTask('${todo.id}')" class="text-red-500 hover:text-red-700">
-                                            🗑️
-                                        </button>
-                                    </div>
-                                `).join('')}
-                                
-                                ${completedTodos.length > 0 ? `
-                                    <div class="mt-6">
-                                        <h4 class="font-bold mb-3">المهام المنتهية (${completedTodos.length})</h4>
-                                        <div class="space-y-3">
-                                            ${completedTodos.map(todo => `
-                                                <div class="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-600 rounded-lg" data-task-id="${todo.id}">
-                                                    <div class="flex items-center gap-3">
-                                                        <input type="checkbox" checked disabled class="h-5 w-5">
-                                                        <div>
-                                                            <p class="line-through text-gray-500">${todo.text}</p>
-                                                        </div>
-                                                    </div>
-                                                    <button onclick="deleteTask('${todo.id}')" class="text-red-500 hover:text-red-700">
-                                                        🗑️
-                                                    </button>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `}
-                    </div>
+           <section class="mt-8">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow">
+    
+    <!-- Header -->
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+      <h3 class="text-xl font-bold flex items-center gap-2">
+        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v14l-5-3-5 3V6a2 2 0 00-2-2z"/>
+        </svg>
+        قائمة المهام
+      </h3>
+
+      <button data-add-task
+        class="px-4 py-2 bg-primary text-white rounded-lg text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        إضافة مهمة
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="p-6">
+      ${state.todos.length === 0 ? `
+        <div class="text-center py-8">
+          <p class="text-gray-500 mb-4">لا توجد مهام حالياً</p>
+          <button data-add-task
+            class="px-6 py-2 bg-primary text-white rounded-lg flex items-center gap-2 mx-auto">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            إضافة أول مهمة
+          </button>
+        </div>
+      ` : `
+        <div class="space-y-3">
+          ${activeTodos.map(todo => `
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+              data-task-id="${todo.id}">
+              
+              <div class="flex items-start gap-3">
+                <input type="checkbox"
+                  class="h-5 w-5 mt-1"
+                  ${todo.completed ? 'checked' : ''}
+                  onchange="toggleTask('${todo.id}')">
+
+                <div>
+                  <p class="${todo.completed ? 'line-through text-gray-500' : ''}">
+                    ${todo.text}
+                  </p>
+
+                  ${todo.patientName ? `
+                    <p class="text-sm text-primary mt-1 flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M15 7a3 3 0 11-6 0 3 3 0 016 0zM4 21a8 8 0 0116 0"/>
+                      </svg>
+                      ${todo.patientName}
+                    </p>
+                  ` : ''}
+
+                  ${todo.dueDate ? `
+                    <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                      ${new Date(todo.dueDate).toLocaleDateString('ar-EG')}
+                    </p>
+                  ` : ''}
                 </div>
-            </section>
+              </div>
+
+              <button onclick="deleteTask('${todo.id}')"
+                class="text-red-500 hover:text-red-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-6 4h8"/>
+                </svg>
+              </button>
+            </div>
+          `).join('')}
+
+          ${completedTodos.length > 0 ? `
+            <div class="mt-6">
+              <h4 class="font-bold mb-3">
+                المهام المنتهية (${completedTodos.length})
+              </h4>
+
+              <div class="space-y-3">
+                ${completedTodos.map(todo => `
+                  <div class="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-600 rounded-lg"
+                    data-task-id="${todo.id}">
+                    
+                    <div class="flex items-center gap-3">
+                      <input type="checkbox" checked disabled class="h-5 w-5">
+                      <p class="line-through text-gray-500">${todo.text}</p>
+                    </div>
+
+                    <button onclick="deleteTask('${todo.id}')"
+                      class="text-red-500 hover:text-red-700">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-6 4h8"/>
+                      </svg>
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `}
+    </div>
+  </div>
+</section>
+
         `;
     }
 
@@ -2621,6 +2666,487 @@ async function savePatient() {
             </div>
         `;
     }
+// app.js - الجزء المكمل
+// في نهاية ملف app.js بعد الدوال الموجودة، أضف:
+
+// دوال إدارة الأدوية
+function addMedication(patientId) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+            <div class="bg-primary p-6 text-white flex justify-between items-center rounded-t-3xl">
+                <h3 class="text-xl font-black">إضافة دواء جديد</h3>
+                <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">اسم الدواء</label>
+                    <input type="text" id="med-name" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">الجرعة</label>
+                        <input type="text" id="med-dosage" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="500mg">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">التكرار</label>
+                        <input type="text" id="med-frequency" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="كل 8 ساعات">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">طريقة الاستعمال</label>
+                    <select id="med-route" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                        <option value="oral">فموي</option>
+                        <option value="iv">وريدي</option>
+                        <option value="im">عضلي</option>
+                        <option value="sc">تحت الجلد</option>
+                        <option value="topical">موضعي</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">ملاحظات</label>
+                    <textarea id="med-notes" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="2"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">تاريخ البدء</label>
+                    <input type="date" id="med-start-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                </div>
+            </div>
+            
+            <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
+                <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    إلغاء
+                </button>
+                <button onclick="saveMedication('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
+                    حفظ الدواء
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+async function saveMedication(patientId) {
+    const medication = {
+        name: document.getElementById('med-name').value,
+        dosage: document.getElementById('med-dosage').value,
+        frequency: document.getElementById('med-frequency').value,
+        route: document.getElementById('med-route').value,
+        notes: document.getElementById('med-notes').value,
+        startDate: document.getElementById('med-start-date').value,
+        createdAt: new Date().toISOString()
+    };
+    
+    if (!medication.name || !medication.dosage) {
+        showNotification('الرجاء إدخال اسم الدواء والجرعة', 'warning');
+        return;
+    }
+    
+    try {
+        const patient = state.patients.find(p => p.id === patientId);
+        const updatedMedications = [...(patient.medications || []), medication];
+        
+        await PocketBaseService.PatientService.updatePatient(patientId, {
+            medications: updatedMedications
+        });
+        
+        showNotification('تم إضافة الدواء بنجاح', 'success');
+        await loadInitialData();
+        render();
+        
+        // إغلاق المودال
+        const modal = document.querySelector('.fixed.inset-0.z-50');
+        if (modal) modal.remove();
+        
+    } catch (error) {
+        console.error('Error saving medication:', error);
+        showNotification('خطأ في حفظ الدواء', 'error');
+    }
+}
+
+// دوال إدارة التحاليل
+function addLabTest(patientId) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+            <div class="bg-primary p-6 text-white flex justify-between items-center rounded-t-3xl">
+                <h3 class="text-xl font-black">إضافة تحليل جديد</h3>
+                <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">نوع التحليل</label>
+                    <input type="text" id="lab-type" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="CBC, Creatinine, etc.">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">القيمة</label>
+                        <input type="text" id="lab-value" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">الوحدة</label>
+                        <input type="text" id="lab-unit" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="mg/dL, mmol/L">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">النطاق المرجعي</label>
+                    <input type="text" id="lab-range" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="3.5-5.5">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">التاريخ</label>
+                    <input type="datetime-local" id="lab-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">ملاحظات</label>
+                    <textarea id="lab-notes" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="2"></textarea>
+                </div>
+            </div>
+            
+            <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
+                <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    إلغاء
+                </button>
+                <button onclick="saveLabTest('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
+                    حفظ التحليل
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+async function saveLabTest(patientId) {
+    const labTest = {
+        type: document.getElementById('lab-type').value,
+        value: document.getElementById('lab-value').value,
+        unit: document.getElementById('lab-unit').value,
+        range: document.getElementById('lab-range').value,
+        date: document.getElementById('lab-date').value || new Date().toISOString(),
+        notes: document.getElementById('lab-notes').value,
+        createdAt: new Date().toISOString()
+    };
+    
+    if (!labTest.type || !labTest.value) {
+        showNotification('الرجاء إدخال نوع التحليل والقيمة', 'warning');
+        return;
+    }
+    
+    try {
+        const patient = state.patients.find(p => p.id === patientId);
+        const updatedLabs = [...(patient.labs || []), labTest];
+        
+        await PocketBaseService.PatientService.updatePatient(patientId, {
+            labs: updatedLabs
+        });
+        
+        showNotification('تم إضافة التحليل بنجاح', 'success');
+        await loadInitialData();
+        render();
+        
+        const modal = document.querySelector('.fixed.inset-0.z-50');
+        if (modal) modal.remove();
+        
+    } catch (error) {
+        console.error('Error saving lab test:', error);
+        showNotification('خطأ في حفظ التحليل', 'error');
+    }
+}
+
+// دوال إدارة الأشعة
+function addRadiology(patientId) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+            <div class="bg-primary p-6 text-white flex justify-between items-center rounded-t-3xl">
+                <h3 class="text-xl font-black">إضافة أشعة جديدة</h3>
+                <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">نوع الأشعة</label>
+                    <select id="rad-type" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                        <option value="xray">أشعة سينية</option>
+                        <option value="ct">أشعة مقطعية</option>
+                        <option value="mri">رنين مغناطيسي</option>
+                        <option value="ultrasound">سونار</option>
+                        <option value="echo">إيكو</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">المنطقة</label>
+                    <input type="text" id="rad-area" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="الصدر، البطن، الدماغ">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">النتيجة</label>
+                    <textarea id="rad-result" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="3" placeholder="تقرير الأشعة..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">الطبيب المشخص</label>
+                    <input type="text" id="rad-doctor" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">التاريخ</label>
+                    <input type="date" id="rad-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                </div>
+            </div>
+            
+            <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
+                <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    إلغاء
+                </button>
+                <button onclick="saveRadiology('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
+                    حفظ الأشعة
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+async function saveRadiology(patientId) {
+    const radiology = {
+        type: document.getElementById('rad-type').value,
+        area: document.getElementById('rad-area').value,
+        result: document.getElementById('rad-result').value,
+        doctor: document.getElementById('rad-doctor').value,
+        date: document.getElementById('rad-date').value || new Date().toISOString(),
+        createdAt: new Date().toISOString()
+    };
+    
+    if (!radiology.type || !radiology.area) {
+        showNotification('الرجاء إدخال نوع الأشعة والمنطقة', 'warning');
+        return;
+    }
+    
+    try {
+        const patient = state.patients.find(p => p.id === patientId);
+        const updatedRadiology = [...(patient.radiology || []), radiology];
+        
+        await PocketBaseService.PatientService.updatePatient(patientId, {
+            radiology: updatedRadiology
+        });
+        
+        showNotification('تم إضافة الأشعة بنجاح', 'success');
+        await loadInitialData();
+        render();
+        
+        const modal = document.querySelector('.fixed.inset-0.z-50');
+        if (modal) modal.remove();
+        
+    } catch (error) {
+        console.error('Error saving radiology:', error);
+        showNotification('خطأ في حفظ الأشعة', 'error');
+    }
+}
+
+// دالة حذف البيانات
+async function deleteLabTest(patientId, index) {
+    if (!confirm('هل تريد حذف هذا التحليل؟')) return;
+    
+    try {
+        const patient = state.patients.find(p => p.id === patientId);
+        const updatedLabs = patient.labs.filter((_, i) => i !== index);
+        
+        await PocketBaseService.PatientService.updatePatient(patientId, {
+            labs: updatedLabs
+        });
+        
+        showNotification('تم حذف التحليل', 'success');
+        await loadInitialData();
+        render();
+        
+    } catch (error) {
+        console.error('Error deleting lab test:', error);
+        showNotification('خطأ في حذف التحليل', 'error');
+    }
+}
+
+async function deleteRadiology(patientId, index) {
+    if (!confirm('هل تريد حذف هذه الأشعة؟')) return;
+    
+    try {
+        const patient = state.patients.find(p => p.id === patientId);
+        const updatedRadiology = patient.radiology.filter((_, i) => i !== index);
+        
+        await PocketBaseService.PatientService.updatePatient(patientId, {
+            radiology: updatedRadiology
+        });
+        
+        showNotification('تم حذف الأشعة', 'success');
+        await loadInitialData();
+        render();
+        
+    } catch (error) {
+        console.error('Error deleting radiology:', error);
+        showNotification('خطأ في حذف الأشعة', 'error');
+    }
+}
+
+async function deleteEvent(patientId, index) {
+    if (!confirm('هل تريد حذف هذا الحدث؟')) return;
+    
+    try {
+        const patient = state.patients.find(p => p.id === patientId);
+        const updatedEvents = patient.isbar?.shift_notes?.filter((_, i) => i !== index) || [];
+        
+        const updatedIsbar = { ...patient.isbar, shift_notes: updatedEvents };
+        
+        await PocketBaseService.PatientService.updatePatient(patientId, {
+            isbar: updatedIsbar
+        });
+        
+        showNotification('تم حذف الحدث', 'success');
+        await loadInitialData();
+        render();
+        
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        showNotification('خطأ في حذف الحدث', 'error');
+    }
+}
+
+function addClinicalEvent(patientId) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+            <div class="bg-primary p-6 text-white flex justify-between items-center rounded-t-3xl">
+                <h3 class="text-xl font-black">إضافة حدث سريري</h3>
+                <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">الحدث</label>
+                    <textarea id="event-text" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="3" placeholder="وصف الحدث السريري..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">التصنيف</label>
+                    <select id="event-category" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                        <option value="assessment">تقييم</option>
+                        <option value="intervention">تدخل</option>
+                        <option value="medication">دواء</option>
+                        <option value="procedure">إجراء</option>
+                        <option value="note">ملاحظة</option>
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">التاريخ</label>
+                        <input type="date" id="event-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">الوقت</label>
+                        <input type="time" id="event-time" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" value="${new Date().toTimeString().slice(0,5)}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
+                <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    إلغاء
+                </button>
+                <button onclick="saveClinicalEvent('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
+                    حفظ الحدث
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+async function saveClinicalEvent(patientId) {
+    const event = {
+        event: document.getElementById('event-text').value,
+        category: document.getElementById('event-category').value,
+        date: document.getElementById('event-date').value,
+        time: document.getElementById('event-time').value,
+        createdAt: new Date().toISOString()
+    };
+    
+    if (!event.event) {
+        showNotification('الرجاء إدخال وصف الحدث', 'warning');
+        return;
+    }
+    
+    try {
+        const patient = state.patients.find(p => p.id === patientId);
+        const updatedEvents = [{ ...event, id: Date.now().toString() }, ...(patient.isbar?.shift_notes || [])];
+        
+        const updatedIsbar = { ...patient.isbar, shift_notes: updatedEvents };
+        
+        await PocketBaseService.PatientService.updatePatient(patientId, {
+            isbar: updatedIsbar
+        });
+        
+        showNotification('تم إضافة الحدث', 'success');
+        await loadInitialData();
+        render();
+        
+        const modal = document.querySelector('.fixed.inset-0.z-50');
+        if (modal) modal.remove();
+        
+    } catch (error) {
+        console.error('Error saving event:', error);
+        showNotification('خطأ في حفظ الحدث', 'error');
+    }
+}
+
+// دالة النسخ إلى الحافظة
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('تم النسخ إلى الحافظة', 'success');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        showNotification('فشل النسخ', 'error');
+    });
+}
+
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user is authenticated
+    if (window.PocketBaseService && window.PocketBaseService.UserService.isAuthenticated()) {
+        window.NuraithmApp.state.isAuthenticated = true;
+        window.NuraithmApp.state.currentUser = window.PocketBaseService.UserService.getCurrentUser();
+        window.NuraithmApp.init();
+    }
+});
+
 
     // Public API
     return {
@@ -2637,3 +3163,16 @@ async function savePatient() {
 
 // Make app globally available
 window.NuraithmApp = NuraithmApp;
+// جعل الدوال متاحة عالمياً
+window.addMedication = addMedication;
+window.saveMedication = saveMedication;
+window.addLabTest = addLabTest;
+window.saveLabTest = saveLabTest;
+window.deleteLabTest = deleteLabTest;
+window.addRadiology = addRadiology;
+window.saveRadiology = saveRadiology;
+window.deleteRadiology = deleteRadiology;
+window.addClinicalEvent = addClinicalEvent;
+window.saveClinicalEvent = saveClinicalEvent;
+window.deleteEvent = deleteEvent;
+window.copyToClipboard = copyToClipboard;
