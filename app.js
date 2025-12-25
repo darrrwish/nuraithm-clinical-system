@@ -1,6 +1,6 @@
-// Main Application File
+// Main Application File - إصدار كامل مع إصلاحات
 const NuraithmApp = (function() {
-    // Application State
+    // حالة التطبيق
     const state = {
         isAuthenticated: false,
         currentUser: null,
@@ -19,22 +19,23 @@ const NuraithmApp = (function() {
         modalTab: 'id',
         apiKeyConfigured: false,
         isLoading: false,
-        isSettingsOpen: false
+        isSettingsOpen: false,
+        tempPatientData: {} // تخزين البيانات المؤقتة للنماذج
     };
 
-    // DOM Elements
+    // عناصر DOM
     let elements = {};
 
-    // Translation function
+    // دالة الترجمة
     function translate(ar, en) {
         return state.lang === 'ar' ? ar : en;
     }
 
-    // Initialize Application
+    // تهيئة التطبيق
     async function init() {
-        console.log('Initializing Nuraithm App...');
+        console.log('تهيئة تطبيق نورعيظم...');
         
-        // Check authentication
+        // التحقق من المصادقة
         if (!state.isAuthenticated) {
             renderAuthRequired();
             return;
@@ -48,20 +49,20 @@ const NuraithmApp = (function() {
         checkApiKeyStatus();
         render();
         
-        // Start realtime subscriptions
+        // بدء الاشتراكات الفورية
         startRealtimeSubscriptions();
     }
 
-    // Setup DOM References
+    // إعداد مراجع DOM
     function setupDOMReferences() {
         elements = {
             app: document.getElementById('app')
         };
     }
 
-    // Load Initial Data from PocketBase
+    // تحميل البيانات الأولية
     async function loadInitialData() {
-        console.log('Loading data from PocketBase...');
+        console.log('جاري تحميل البيانات من PocketBase...');
         
         try {
             const data = await PocketBaseService.initialize();
@@ -70,14 +71,13 @@ const NuraithmApp = (function() {
             state.alerts = data.alerts || [];
             state.todos = data.todos || [];
             
-            // Load signature
+            // تحميل التوقيع
             state.signature = localStorage.getItem('nuraithm_signature') || state.currentUser?.name || '';
             
-            console.log(`Loaded ${state.patients.length} patients, ${state.alerts.length} alerts, ${state.todos.length} todos`);
+            console.log(`تم تحميل ${state.patients.length} مريض، ${state.alerts.length} تنبيه، ${state.todos.length} مهمة`);
             
         } catch (error) {
-            console.error('Error loading data:', error);
-            // Initialize with empty arrays
+            console.error('خطأ في تحميل البيانات:', error);
             state.patients = [];
             state.alerts = [];
             state.todos = [];
@@ -85,66 +85,62 @@ const NuraithmApp = (function() {
         }
     }
 
-    // Check API key status
+    // التحقق من حالة مفتاح API
     function checkApiKeyStatus() {
         if (window.DeepSeekService && window.DeepSeekService.hasApiKey()) {
             state.apiKeyConfigured = true;
-            console.log('DeepSeek API key is configured and valid');
+            console.log('مفتاح DeepSeek API مضبوط وصالح');
         } else {
             state.apiKeyConfigured = false;
-            console.log('DeepSeek API key not configured');
+            console.log('مفتاح DeepSeek API غير مضبوط');
         }
     }
 
-    // Start realtime subscriptions
+    // بدء الاشتراكات الفورية
     function startRealtimeSubscriptions() {
         try {
-            // Subscribe to patients
             PocketBaseService.RealtimeService.subscribeToPatients((e) => {
-                console.log('Patient update:', e);
+                console.log('تحديث المريض:', e);
                 if (e.action === 'create' || e.action === 'update' || e.action === 'delete') {
                     loadInitialData().then(() => render());
                 }
             });
             
-            // Subscribe to alerts
             PocketBaseService.RealtimeService.subscribeToAlerts((e) => {
-                console.log('Alert update:', e);
+                console.log('تحديث التنبيه:', e);
                 if (e.action === 'create') {
-                    // Play notification sound for new alerts
                     playNotificationSound();
                 }
                 loadInitialData().then(() => render());
             });
             
-            // Subscribe to todos
             PocketBaseService.RealtimeService.subscribeToTodos((e) => {
-                console.log('Todo update:', e);
+                console.log('تحديث المهمة:', e);
                 loadInitialData().then(() => render());
             });
             
         } catch (error) {
-            console.error('Realtime subscription error:', error);
+            console.error('خطأ في الاشتراكات الفورية:', error);
         }
     }
 
-    // Play notification sound
+    // تشغيل صوت التنبيه
     function playNotificationSound() {
         try {
             const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ');
-            audio.play().catch(e => console.log('Audio play failed:', e));
+            audio.play().catch(e => console.log('فشل تشغيل الصوت:', e));
         } catch (error) {
-            console.log('Notification sound error:', error);
+            console.log('خطأ صوت التنبيه:', error);
         }
     }
 
-    // Setup Event Listeners
+    // إعداد مستمعي الأحداث
     function setupEventListeners() {
         document.addEventListener('click', handleGlobalClick);
         document.addEventListener('input', handleGlobalInput);
         document.addEventListener('change', handleGlobalChange);
         
-        // Close settings dropdown when clicking outside
+        // إغلاق القائمة المنسدلة عند النقر خارجها
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('settings-dropdown');
             const toggle = document.getElementById('settings-toggle');
@@ -157,18 +153,18 @@ const NuraithmApp = (function() {
         });
     }
 
-    // Handle Global Clicks
+    // معالجة النقرات العامة
     async function handleGlobalClick(e) {
         const target = e.target;
         
-        // Add task button
+        // إضافة مهمة
         if (target.closest('[data-add-task]')) {
             e.preventDefault();
             showAddTaskModal();
             return;
         }
         
-        // Toggle task
+        // تبديل حالة المهمة
         if (target.closest('[data-task-id]')) {
             const taskId = target.closest('[data-task-id]').dataset.taskId;
             if (taskId) {
@@ -177,21 +173,21 @@ const NuraithmApp = (function() {
             }
         }
         
-        // Logout
+        // تسجيل الخروج
         if (target.closest('[data-logout]')) {
             e.preventDefault();
             await logout();
             return;
         }
         
-        // User profile
+        // الملف الشخصي
         if (target.closest('[data-profile]')) {
             e.preventDefault();
             showUserProfileModal();
             return;
         }
         
-        // Settings toggle
+        // تبديل الإعدادات
         if (target.closest('#settings-toggle')) {
             e.preventDefault();
             const dropdown = document.getElementById('settings-dropdown');
@@ -201,14 +197,14 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Add patient button
+        // إضافة مريض
         if (target.closest('[data-add-patient]')) {
             e.preventDefault();
             openPatientModal();
             return;
         }
         
-        // Edit patient button
+        // تعديل مريض
         if (target.closest('[data-edit-patient]')) {
             e.preventDefault();
             const patientCard = target.closest('[data-patient-id]');
@@ -219,21 +215,21 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Close modal button
+        // إغلاق النافذة
         if (target.closest('[data-close-modal]')) {
             e.preventDefault();
             closeModal();
             return;
         }
         
-        // Save patient button
+        // حفظ المريض
         if (target.closest('[data-save-patient]')) {
             e.preventDefault();
             await savePatient();
             return;
         }
         
-        // Delete patient button
+        // حذف المريض
         if (target.closest('[data-delete-patient]')) {
             e.preventDefault();
             const patientCard = target.closest('[data-patient-id]');
@@ -244,14 +240,14 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Export PDF button
+        // تصدير PDF
         if (target.closest('[data-export-pdf]')) {
             e.preventDefault();
             await exportPatientPDF();
             return;
         }
         
-        // Toggle todo
+        // تبديل المهمة
         if (target.closest('[data-toggle-todo]')) {
             e.preventDefault();
             const todoItem = target.closest('[data-todo-id]');
@@ -262,14 +258,14 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Add todo
+        // إضافة مهمة
         if (target.closest('[data-add-todo]')) {
             e.preventDefault();
             await addTodo();
             return;
         }
         
-        // Delete todo
+        // حذف مهمة
         if (target.closest('[data-delete-todo]')) {
             e.preventDefault();
             const todoItem = target.closest('[data-todo-id]');
@@ -280,7 +276,7 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Mark alert as read
+        // تعليم التنبيه كمقروء
         if (target.closest('[data-mark-alert-read]')) {
             e.preventDefault();
             const alertItem = target.closest('[data-alert-id]');
@@ -291,7 +287,7 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Delete alert
+        // حذف التنبيه
         if (target.closest('[data-delete-alert]')) {
             e.preventDefault();
             const alertItem = target.closest('[data-alert-id]');
@@ -302,14 +298,14 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Clear all alerts
+        // مسح جميع التنبيهات
         if (target.closest('[data-clear-alerts]')) {
             e.preventDefault();
             await clearAllAlerts();
             return;
         }
         
-        // Switch view (dashboard/alerts)
+        // تبديل العرض (الرئيسية/التنبيهات)
         if (target.closest('[data-view]')) {
             e.preventDefault();
             const view = target.closest('[data-view]').dataset.view;
@@ -317,7 +313,7 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Switch patient tab (active/discharged)
+        // تبديل تبويب المرضى (نشطين/مسلمين)
         if (target.closest('[data-patient-tab]')) {
             e.preventDefault();
             const tab = target.closest('[data-patient-tab]').dataset.patientTab;
@@ -325,35 +321,35 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Add quick todo
+        // إضافة مهمة سريعة
         if (target.closest('[data-quick-add-todo]')) {
             e.preventDefault();
             await addQuickTodo();
             return;
         }
         
-        // Add quick event
+        // إضافة حدث سريع
         if (target.closest('[data-quick-add-event]')) {
             e.preventDefault();
             await addQuickEvent();
             return;
         }
         
-        // Backup data
+        // نسخة احتياطية
         if (target.closest('[data-backup]')) {
             e.preventDefault();
             await backupData();
             return;
         }
         
-        // Import data
+        // استيراد البيانات
         if (target.closest('[data-import]')) {
             e.preventDefault();
             await importData();
             return;
         }
         
-        // Patient action (careplan, shift report, etc.)
+        // إجراءات المريض
         if (target.closest('[data-patient-action]')) {
             e.preventDefault();
             const actionBtn = target.closest('[data-patient-action]');
@@ -366,7 +362,7 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Modal tab switch
+        // تبديل تبويب النافذة
         if (target.closest('[data-tab]')) {
             e.preventDefault();
             const tab = target.closest('[data-tab]').dataset.tab;
@@ -374,7 +370,7 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Configure API key
+        // تكوين مفتاح API
         if (target.closest('[data-configure-api]')) {
             e.preventDefault();
             if (typeof window.showApiKeyModal === 'function') {
@@ -383,56 +379,61 @@ const NuraithmApp = (function() {
             return;
         }
         
-        // Language toggle
+        // تبديل اللغة
         if (target.closest('[data-lang-toggle]')) {
             e.preventDefault();
             toggleLanguage();
             return;
         }
         
-        // AI Language toggle
+        // تبديل لغة الذكاء الاصطناعي
         if (target.closest('[data-ai-lang-toggle]')) {
             e.preventDefault();
             toggleAiLanguage();
             return;
         }
         
-        // Dark mode toggle
+        // تبديل الوضع الداكن
         if (target.closest('[data-dark-mode-toggle]')) {
             e.preventDefault();
             toggleDarkMode();
             return;
         }
+        
         // إضافة دواء
-if (target.closest('[data-add-medication]')) {
-    e.preventDefault();
-    const patientId = target.closest('[data-patient-id]')?.dataset.patientId;
-    if (patientId) {
-        addMedication(patientId);
-    }
-    return;
-}
-
-// إضافة تحليل
-if (target.closest('[data-add-lab]')) {
-    e.preventDefault();
-    const patientId = target.closest('[data-patient-id]')?.dataset.patientId;
-    if (patientId) {
-        addLabTest(patientId);
-    }
-    return;
-}
-
-// إضافة أشعة
-if (target.closest('[data-add-radiology]')) {
-    e.preventDefault();
-    const patientId = target.closest('[data-patient-id]')?.dataset.patientId;
-    if (patientId) {
-        addRadiology(patientId);
-    }
-    return;
-}
-        // Generate AI alerts
+        if (target.closest('[data-add-medication]')) {
+            e.preventDefault();
+            const patientCard = target.closest('[data-patient-id]');
+            if (patientCard) {
+                const patientId = patientCard.dataset.patientId;
+                showMedicationModal(patientId);
+            }
+            return;
+        }
+        
+        // إضافة تحليل
+        if (target.closest('[data-add-lab]')) {
+            e.preventDefault();
+            const patientCard = target.closest('[data-patient-id]');
+            if (patientCard) {
+                const patientId = patientCard.dataset.patientId;
+                showLabModal(patientId);
+            }
+            return;
+        }
+        
+        // إضافة أشعة
+        if (target.closest('[data-add-radiology]')) {
+            e.preventDefault();
+            const patientCard = target.closest('[data-patient-id]');
+            if (patientCard) {
+                const patientId = patientCard.dataset.patientId;
+                showRadiologyModal(patientId);
+            }
+            return;
+        }
+        
+        // توليد تنبيهات الذكاء الاصطناعي
         if (target.closest('[data-generate-alerts]')) {
             e.preventDefault();
             const patientCard = target.closest('[data-patient-id]');
@@ -443,7 +444,7 @@ if (target.closest('[data-add-radiology]')) {
             return;
         }
         
-        // Handover patient
+        // تسليم المريض
         if (target.closest('[data-handover-patient]')) {
             e.preventDefault();
             const patientCard = target.closest('[data-patient-id]');
@@ -454,7 +455,7 @@ if (target.closest('[data-add-radiology]')) {
             return;
         }
         
-        // Receive patient
+        // استلام المريض
         if (target.closest('[data-receive-patient]')) {
             e.preventDefault();
             const patientCard = target.closest('[data-patient-id]');
@@ -465,7 +466,7 @@ if (target.closest('[data-add-radiology]')) {
             return;
         }
         
-        // Update signature
+        // تحديث التوقيع
         if (target.closest('[data-update-signature]')) {
             e.preventDefault();
             const signatureInput = document.getElementById('signature-input');
@@ -480,17 +481,24 @@ if (target.closest('[data-add-radiology]')) {
             return;
         }
         
-        // Open signature modal
+        // فتح نافذة التوقيع
         if (target.closest('[data-signature-settings]')) {
             e.preventDefault();
             showSignatureModal();
             return;
         }
+        
+        // حفظ البيانات المؤقتة
+        if (target.closest('[data-save-temp]')) {
+            e.preventDefault();
+            saveTempFormData();
+            return;
+        }
     }
 
-    // Handle Global Input
+    // معالجة الإدخال العام
     function handleGlobalInput(e) {
-        // Debounced search
+        // البحث المؤجل
         if (e.target.closest('[data-search]')) {
             clearTimeout(window.searchTimeout);
             window.searchTimeout = setTimeout(() => {
@@ -498,20 +506,40 @@ if (target.closest('[data-add-radiology]')) {
                 render();
             }, 300);
         }
+        
+        // حفظ البيانات المؤقتة في الحقول
+        if (e.target.closest('.patient-field')) {
+            const fieldId = e.target.id;
+            const value = e.target.value;
+            if (!state.tempPatientData[state.selectedPatientId]) {
+                state.tempPatientData[state.selectedPatientId] = {};
+            }
+            state.tempPatientData[state.selectedPatientId][fieldId] = value;
+        }
     }
 
-    // Handle Global Changes
+    // معالجة التغييرات العامة
     function handleGlobalChange(e) {
         const target = e.target;
         
-        // Signature input
+        // حفظ التوقيع
         if (target.closest('[data-signature]')) {
             state.signature = target.value;
             localStorage.setItem('nuraithm_signature', state.signature);
         }
+        
+        // حفظ البيانات المؤقتة في القوائم المنسدلة
+        if (target.closest('.patient-field')) {
+            const fieldId = target.id;
+            const value = target.value;
+            if (!state.tempPatientData[state.selectedPatientId]) {
+                state.tempPatientData[state.selectedPatientId] = {};
+            }
+            state.tempPatientData[state.selectedPatientId][fieldId] = value;
+        }
     }
 
-    // State Management Functions
+    // إدارة الحالة
     function toggleLanguage() {
         state.lang = state.lang === 'ar' ? 'en' : 'ar';
         localStorage.setItem('nuraithm_lang', state.lang);
@@ -558,28 +586,81 @@ if (target.closest('[data-add-radiology]')) {
     function switchModalTab(tab) {
         state.modalTab = tab;
         render();
+        
+        // تحميل البيانات المحفوظة للتبويب الحالي
+        loadTempFormData();
     }
 
-    // Task Management Functions
+    // حفظ البيانات المؤقتة للنموذج
+    function saveTempFormData() {
+        if (!state.selectedPatientId) return;
+        
+        const patientData = collectFormData();
+        if (!state.tempPatientData[state.selectedPatientId]) {
+            state.tempPatientData[state.selectedPatientId] = {};
+        }
+        
+        // دمج البيانات الجديدة مع القديمة
+        state.tempPatientData[state.selectedPatientId] = {
+            ...state.tempPatientData[state.selectedPatientId],
+            ...patientData
+        };
+        
+        showNotification(translate('تم حفظ البيانات مؤقتاً', 'Data saved temporarily'), 'success');
+    }
+
+    // تحميل البيانات المؤقتة للنموذج
+    function loadTempFormData() {
+        if (!state.selectedPatientId || !state.tempPatientData[state.selectedPatientId]) return;
+        
+        const tempData = state.tempPatientData[state.selectedPatientId];
+        setTimeout(() => {
+            Object.keys(tempData).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = tempData[key];
+                }
+            });
+        }, 100);
+    }
+
+    // جمع بيانات النموذج
+    function collectFormData() {
+        const data = {};
+        
+        // جمع البيانات من جميع الحقول
+        const fields = document.querySelectorAll('.patient-field');
+        fields.forEach(field => {
+            if (field.id) {
+                data[field.id] = field.value;
+            }
+        });
+        
+        return data;
+    }
+
+    // إدارة المهام
     function showAddTaskModal() {
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
         modal.innerHTML = `
-            <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full">
-                <div class="bg-primary text-white p-6 rounded-t-2xl flex justify-between items-center">
-                    <h2 class="text-xl font-bold">إضافة مهمة جديدة</h2>
-                    <button onclick="this.closest('.fixed').remove()" class="text-white text-2xl">&times;</button>
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
+                    <h3 class="text-xl font-black">إضافة مهمة جديدة</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
                 </div>
-                <div class="p-6">
-                    <div class="form-group mb-4">
+                <div class="p-6 space-y-4">
+                    <div>
                         <label class="block text-sm font-medium mb-2">وصف المهمة</label>
-                        <textarea id="task-text" class="w-full p-3 border rounded-lg" rows="3" placeholder="أدخل وصف المهمة..."></textarea>
+                        <textarea id="task-text" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="3" placeholder="أدخل وصف المهمة..."></textarea>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div class="form-group">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
                             <label class="block text-sm font-medium mb-2">المريض</label>
-                            <select id="task-patient" class="w-full p-3 border rounded-lg">
+                            <select id="task-patient" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
                                 <option value="">عام (غير مرتبط بمريض)</option>
                                 ${state.patients.filter(p => p.status === 'active').map(p => 
                                     `<option value="${p.id}">${p.name} (${p.roomNumber})</option>`
@@ -587,9 +668,9 @@ if (target.closest('[data-add-radiology]')) {
                             </select>
                         </div>
                         
-                        <div class="form-group">
+                        <div>
                             <label class="block text-sm font-medium mb-2">الأولوية</label>
-                            <select id="task-priority" class="w-full p-3 border rounded-lg">
+                            <select id="task-priority" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
                                 <option value="low">منخفضة</option>
                                 <option value="medium" selected>متوسطة</option>
                                 <option value="high">عالية</option>
@@ -597,29 +678,33 @@ if (target.closest('[data-add-radiology]')) {
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div class="form-group">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
                             <label class="block text-sm font-medium mb-2">موعد التسليم</label>
-                            <input type="date" id="task-dueDate" class="w-full p-3 border rounded-lg">
+                            <input type="date" id="task-dueDate" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
                         </div>
                         
-                        <div class="form-group">
+                        <div>
                             <label class="block text-sm font-medium mb-2">التذكير</label>
-                            <input type="datetime-local" id="task-reminder" class="w-full p-3 border rounded-lg">
+                            <input type="datetime-local" id="task-reminder" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
                         </div>
                     </div>
-                    
-                    <div class="flex justify-end gap-3">
-                        <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-gray-200 rounded-lg">إلغاء</button>
-                        <button onclick="saveNewTask()" class="px-6 py-2 bg-primary text-white rounded-lg">حفظ المهمة</button>
-                    </div>
+                </div>
+                
+                <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                        إلغاء
+                    </button>
+                    <button onclick="saveNewTask()" class="px-6 py-2 bg-primary text-white rounded-xl">
+                        حفظ المهمة
+                    </button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(modal);
         
-        window.saveNewTask = function() {
+        window.saveNewTask = async function() {
             const text = document.getElementById('task-text').value;
             const patientId = document.getElementById('task-patient').value;
             const priority = document.getElementById('task-priority').value;
@@ -638,167 +723,47 @@ if (target.closest('[data-add-radiology]')) {
                 priority: priority,
                 dueDate: dueDate || null,
                 reminder: reminder || null,
-                completed: false,
-                createdAt: new Date().toISOString()
+                completed: false
             };
             
-            // Save to PocketBase
-            PocketBaseService.TodoService.createTodo(taskData).then(() => {
+            try {
+                await PocketBaseService.TodoService.createTodo(taskData);
                 showNotification('تمت إضافة المهمة بنجاح', 'success');
                 modal.remove();
-                loadInitialData().then(() => render());
-            }).catch(error => {
+                await loadInitialData();
+                render();
+            } catch (error) {
                 console.error('Error saving task:', error);
                 showNotification('حدث خطأ في حفظ المهمة', 'error');
-            });
+            }
         };
     }
 
-    function toggleTask(taskId) {
-        const todo = state.todos.find(t => t.id === taskId);
-        if (todo) {
-            PocketBaseService.TodoService.toggleTodo(taskId).then(() => {
-                loadInitialData().then(() => render());
-            });
+    async function toggleTask(taskId) {
+        try {
+            await PocketBaseService.TodoService.toggleTodo(taskId);
+            await loadInitialData();
+            render();
+        } catch (error) {
+            console.error('Toggle task error:', error);
         }
     }
 
-    function deleteTask(taskId) {
-        if (confirm('هل تريد حذف هذه المهمة؟')) {
-            PocketBaseService.TodoService.deleteTodo(taskId).then(() => {
-                loadInitialData().then(() => render());
-            });
+    async function deleteTask(taskId) {
+        if (!confirm(translate('هل تريد حذف هذه المهمة؟', 'Delete this task?'))) {
+            return;
         }
-    }
-
-    // Render Tasks Section
-    function renderTasksSection() {
-        const activeTodos = state.todos.filter(t => !t.completed);
-        const completedTodos = state.todos.filter(t => t.completed);
         
-        return `
-           <section class="mt-8">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow">
-    
-    <!-- Header -->
-    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-      <h3 class="text-xl font-bold flex items-center gap-2">
-        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v14l-5-3-5 3V6a2 2 0 00-2-2z"/>
-        </svg>
-        قائمة المهام
-      </h3>
-
-      <button data-add-task
-        class="px-4 py-2 bg-primary text-white rounded-lg text-sm flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-        </svg>
-        إضافة مهمة
-      </button>
-    </div>
-
-    <!-- Content -->
-    <div class="p-6">
-      ${state.todos.length === 0 ? `
-        <div class="text-center py-8">
-          <p class="text-gray-500 mb-4">لا توجد مهام حالياً</p>
-          <button data-add-task
-            class="px-6 py-2 bg-primary text-white rounded-lg flex items-center gap-2 mx-auto">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-            </svg>
-            إضافة أول مهمة
-          </button>
-        </div>
-      ` : `
-        <div class="space-y-3">
-          ${activeTodos.map(todo => `
-            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
-              data-task-id="${todo.id}">
-              
-              <div class="flex items-start gap-3">
-                <input type="checkbox"
-                  class="h-5 w-5 mt-1"
-                  ${todo.completed ? 'checked' : ''}
-                  onchange="toggleTask('${todo.id}')">
-
-                <div>
-                  <p class="${todo.completed ? 'line-through text-gray-500' : ''}">
-                    ${todo.text}
-                  </p>
-
-                  ${todo.patientName ? `
-                    <p class="text-sm text-primary mt-1 flex items-center gap-1">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M15 7a3 3 0 11-6 0 3 3 0 016 0zM4 21a8 8 0 0116 0"/>
-                      </svg>
-                      ${todo.patientName}
-                    </p>
-                  ` : ''}
-
-                  ${todo.dueDate ? `
-                    <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                      </svg>
-                      ${new Date(todo.dueDate).toLocaleDateString('ar-EG')}
-                    </p>
-                  ` : ''}
-                </div>
-              </div>
-
-              <button onclick="deleteTask('${todo.id}')"
-                class="text-red-500 hover:text-red-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-6 4h8"/>
-                </svg>
-              </button>
-            </div>
-          `).join('')}
-
-          ${completedTodos.length > 0 ? `
-            <div class="mt-6">
-              <h4 class="font-bold mb-3">
-                المهام المنتهية (${completedTodos.length})
-              </h4>
-
-              <div class="space-y-3">
-                ${completedTodos.map(todo => `
-                  <div class="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-600 rounded-lg"
-                    data-task-id="${todo.id}">
-                    
-                    <div class="flex items-center gap-3">
-                      <input type="checkbox" checked disabled class="h-5 w-5">
-                      <p class="line-through text-gray-500">${todo.text}</p>
-                    </div>
-
-                    <button onclick="deleteTask('${todo.id}')"
-                      class="text-red-500 hover:text-red-700">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-6 4h8"/>
-                      </svg>
-                    </button>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
-        </div>
-      `}
-    </div>
-  </div>
-</section>
-
-        `;
+        try {
+            await PocketBaseService.TodoService.deleteTodo(taskId);
+            await loadInitialData();
+            render();
+        } catch (error) {
+            console.error('Delete task error:', error);
+        }
     }
 
-    // Logout function
+    // تسجيل الخروج
     async function logout() {
         try {
             PocketBaseService.UserService.logout();
@@ -810,54 +775,51 @@ if (target.closest('[data-add-radiology]')) {
         }
     }
 
-    // Show user profile modal
+    // عرض الملف الشخصي
     function showUserProfileModal() {
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
         modal.innerHTML = `
-            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full max-h-[90vh] overflow-hidden">
-                <div class="p-6 border-b dark:border-slate-800 flex justify-between items-center">
-                    <h3 class="text-xl font-black text-white">${translate('الملف الشخصي', 'Profile')}</h3>
-                    <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-white">close</span>
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
+                    <h3 class="text-xl font-black">${translate('الملف الشخصي', 'Profile')}</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
+                
                 <div class="p-6 space-y-4">
                     <div>
-                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 block">
-                            ${translate('الاسم', 'Name')}
-                        </label>
+                        <label class="block text-sm font-medium mb-2">${translate('الاسم', 'Name')}</label>
                         <input type="text" id="profile-name" value="${state.currentUser?.name || ''}"
-                            class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-white">
+                            class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
                     </div>
+                    
                     <div>
-                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 block">
-                            ${translate('اسم المستخدم', 'Username')}
-                        </label>
+                        <label class="block text-sm font-medium mb-2">${translate('اسم المستخدم', 'Username')}</label>
                         <input type="text" value="${state.currentUser?.username || ''}"
-                            class="w-full p-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-white" readonly>
+                            class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" readonly>
                     </div>
+                    
                     <div>
-                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 block">
-                            ${translate('البريد الإلكتروني', 'Email')}
-                        </label>
+                        <label class="block text-sm font-medium mb-2">${translate('البريد الإلكتروني', 'Email')}</label>
                         <input type="email" id="profile-email" value="${state.currentUser?.email || ''}"
-                            class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-white">
+                            class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
                     </div>
+                    
                     <div>
-                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 block">
-                            ${translate('التوقيع', 'Signature')}
-                        </label>
+                        <label class="block text-sm font-medium mb-2">${translate('التوقيع', 'Signature')}</label>
                         <input type="text" id="profile-signature" value="${state.signature || ''}"
-                            class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-white"
+                            class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                             placeholder="${translate('أدخل توقيعك للملفات', 'Enter your signature for documents')}">
                     </div>
                 </div>
-                <div class="p-6 border-t dark:border-slate-800 flex justify-between gap-3">
-                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold text-white">
+                
+                <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
                         ${translate('إلغاء', 'Cancel')}
                     </button>
-                    <button onclick="updateProfile()" class="px-6 py-2 bg-primary text-white rounded-xl font-bold">
+                    <button onclick="updateProfile()" class="px-6 py-2 bg-primary text-white rounded-xl">
                         ${translate('حفظ التغييرات', 'Save Changes')}
                     </button>
                 </div>
@@ -866,7 +828,6 @@ if (target.closest('[data-add-radiology]')) {
         
         document.body.appendChild(modal);
         
-        // Add update profile function
         window.updateProfile = async function() {
             const name = document.getElementById('profile-name').value;
             const email = document.getElementById('profile-email').value;
@@ -896,36 +857,36 @@ if (target.closest('[data-add-radiology]')) {
         };
     }
 
-    // Show signature modal
+    // عرض نافذة التوقيع
     function showSignatureModal() {
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
         modal.innerHTML = `
-            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full max-h-[90vh] overflow-hidden">
-                <div class="bg-primary p-6 text-white flex justify-between items-center">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
                     <h3 class="text-xl font-black">${translate('إعدادات التوقيع', 'Signature Settings')}</h3>
                     <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
                         <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
+                
                 <div class="p-6 space-y-4">
                     <div>
-                        <label class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 block">
-                            ${translate('التوقيع المعتمد', 'Official Signature')}
-                        </label>
+                        <label class="block text-sm font-medium mb-2">${translate('التوقيع المعتمد', 'Official Signature')}</label>
                         <input type="text" id="signature-input" value="${state.signature}"
-                            class="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-primary/20 text-slate-900 dark:text-white"
+                            class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                             placeholder="${translate('مثال: Nurse. Ahmed Khaled', 'Example: Nurse. Ahmed Khaled')}">
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
                             ${translate('سيظهر هذا التوقيع على جميع الملفات المصدرة', 'This signature will appear on all exported documents')}
                         </p>
                     </div>
                 </div>
+                
                 <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
-                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
                         ${translate('إلغاء', 'Cancel')}
                     </button>
-                    <button data-update-signature class="px-6 py-2 bg-primary text-white rounded-xl font-bold">
+                    <button onclick="saveSignature()" class="px-6 py-2 bg-primary text-white rounded-xl">
                         ${translate('حفظ التوقيع', 'Save Signature')}
                     </button>
                 </div>
@@ -933,35 +894,63 @@ if (target.closest('[data-add-radiology]')) {
         `;
         
         document.body.appendChild(modal);
+        
+        window.saveSignature = function() {
+            const signature = document.getElementById('signature-input').value.trim();
+            if (signature) {
+                state.signature = signature;
+                localStorage.setItem('nuraithm_signature', signature);
+                showNotification(translate('تم حفظ التوقيع', 'Signature saved'), 'success');
+                modal.remove();
+            }
+        };
     }
 
-    // Open patient modal
+    // فتح نافذة المريض
     function openPatientModal(patientId = null) {
         state.selectedPatientId = patientId;
         state.isModalOpen = true;
         state.modalTab = 'id';
+        
+        // مسح البيانات المؤقتة القديمة
+        if (patientId && state.tempPatientData[patientId]) {
+            delete state.tempPatientData[patientId];
+        }
+        
         render();
     }
 
     function closeModal() {
+        // حفظ أي بيانات مؤقتة قبل الإغلاق
+        if (state.selectedPatientId && state.tempPatientData[state.selectedPatientId]) {
+            saveTempFormData();
+        }
+        
         state.isModalOpen = false;
         state.selectedPatientId = null;
         render();
     }
 
-    // Save patient
+    // حفظ المريض
     async function savePatient() {
+        // جمع البيانات من جميع التبويبات
         const patientData = collectPatientFormData();
         
         try {
             if (state.selectedPatientId) {
-                // Update existing patient
+                // تحديث مريض موجود
                 await PocketBaseService.PatientService.updatePatient(state.selectedPatientId, patientData);
                 showNotification(translate('تم تحديث بيانات المريض', 'Patient updated'), 'success');
             } else {
-                // Create new patient
-                await PocketBaseService.PatientService.createPatient(patientData);
+                // إضافة مريض جديد
+                const result = await PocketBaseService.PatientService.createPatient(patientData);
+                state.selectedPatientId = result.id;
                 showNotification(translate('تم إضافة المريض بنجاح', 'Patient added successfully'), 'success');
+            }
+            
+            // مسح البيانات المؤقتة
+            if (state.tempPatientData[state.selectedPatientId]) {
+                delete state.tempPatientData[state.selectedPatientId];
             }
             
             await loadInitialData();
@@ -973,100 +962,66 @@ if (target.closest('[data-add-radiology]')) {
         }
     }
 
-    // Collect patient form data
-  function collectPatientFormData() {
-    const isbar = {
-        identification: {
-            room_no: document.getElementById('roomNumber')?.value || '',
-            patient_name: document.getElementById('patientName')?.value || '',
-            mrn: document.getElementById('fileNumber')?.value || '',
-            age: document.getElementById('age')?.value || '',
-            admission_date: document.getElementById('admissionDate')?.value || '',
-            admitted_from: document.getElementById('admittedFrom')?.value || '',
-            consultant: document.getElementById('consultant')?.value || ''
-        },
-        situation: {
-            current_complaints: document.getElementById('currentComplaints')?.value || '',
-            diagnosis: document.getElementById('diagnosis')?.value || '',
-            connections: [],
-            infusions: [],
-            diet: document.getElementById('diet')?.value || ''
-        },
-        background: {
-            past_medical_history: document.getElementById('pastMedicalHistory')?.value || '',
-            chief_complaint: document.getElementById('chiefComplaint')?.value || '',
-            allergy: document.getElementById('allergy')?.value || '',
-            infections_isolation: document.getElementById('isolation')?.value || ''
-        },
-        assessment: {
-            gcs: document.getElementById('gcs')?.value || '15',
-            fall_risk: document.getElementById('fallRisk')?.value || 'low',
-            vitals: document.getElementById('vitals')?.value || '',
-            ventilation: document.getElementById('ventilation')?.value || 'Room Air',
-            bed_sore: document.getElementById('bedSore')?.value || 'no',
-            physical_restraint: document.getElementById('restraint')?.value || 'no',
-            important_findings: document.getElementById('findings')?.value || ''
-        },
-        recommendations: {
-            plan_of_care: document.getElementById('planOfCare')?.value || '',
-            physician_orders: [],
-            cultures: [],
-            consultations: [],
-            risks: document.getElementById('risks')?.value || ''
-        },
-        nursing: {
-            outgoing_nurse: state.signature,
-            receiving_nurse: '',
-            handover_date: '',
-            handover_time: ''
-        },
-        shift_notes: patient?.isbar?.shift_notes || []
-    };
+    // جمع بيانات نموذج المريض من جميع التبويبات
+    function collectPatientFormData() {
+        const tempData = state.tempPatientData[state.selectedPatientId] || {};
+        const selectedPatient = state.selectedPatientId 
+            ? state.patients.find(p => p.id === state.selectedPatientId)
+            : null;
+        
+        const isbar = {
+            identification: {
+                room_no: tempData.roomNumber || selectedPatient?.isbar?.identification?.room_no || '',
+                patient_name: tempData.patientName || selectedPatient?.name || 'مريض جديد',
+                mrn: tempData.fileNumber || selectedPatient?.fileNumber || `MRN${Date.now().toString().slice(-6)}`,
+                age: tempData.age || selectedPatient?.age || '',
+                admission_date: tempData.admissionDate || selectedPatient?.isbar?.identification?.admission_date || new Date().toISOString().split('T')[0],
+                admitted_from: tempData.admittedFrom || selectedPatient?.isbar?.identification?.admitted_from || 'ER',
+                consultant: tempData.consultant || selectedPatient?.isbar?.identification?.consultant || ''
+            },
+            situation: {
+                current_complaints: tempData.currentComplaints || selectedPatient?.isbar?.situation?.current_complaints || '',
+                diagnosis: tempData.diagnosis || selectedPatient?.diagnosis || '',
+                diet: tempData.diet || selectedPatient?.isbar?.situation?.diet || ''
+            },
+            background: {
+                past_medical_history: tempData.pastMedicalHistory || selectedPatient?.isbar?.background?.past_medical_history || '',
+                chief_complaint: tempData.chiefComplaint || selectedPatient?.isbar?.background?.chief_complaint || '',
+                allergy: tempData.allergy || selectedPatient?.isbar?.background?.allergy || 'لا يوجد',
+                infections_isolation: tempData.isolation || selectedPatient?.isbar?.background?.infections_isolation || 'لا يوجد'
+            },
+            assessment: {
+                gcs: tempData.gcs || selectedPatient?.isbar?.assessment?.gcs || '15',
+                fall_risk: tempData.fallRisk || selectedPatient?.isbar?.assessment?.fall_risk || 'low',
+                vitals: tempData.vitals || selectedPatient?.isbar?.assessment?.vitals || '',
+                ventilation: tempData.ventilation || selectedPatient?.isbar?.assessment?.ventilation || 'Room Air',
+                bed_sore: tempData.bedSore || selectedPatient?.isbar?.assessment?.bed_sore || 'no',
+                physical_restraint: tempData.restraint || selectedPatient?.isbar?.assessment?.physical_restraint || 'no',
+                important_findings: tempData.findings || selectedPatient?.isbar?.assessment?.important_findings || ''
+            },
+            recommendations: {
+                plan_of_care: tempData.planOfCare || selectedPatient?.isbar?.recommendations?.plan_of_care || '',
+                risks: tempData.risks || selectedPatient?.isbar?.recommendations?.risks || ''
+            },
+            shift_notes: selectedPatient?.isbar?.shift_notes || []
+        };
 
-    return {
-        name: document.getElementById('patientName')?.value || 'مريض جديد',
-        fileNumber: document.getElementById('fileNumber')?.value || `MRN${Date.now().toString().slice(-6)}`,
-        age: document.getElementById('age')?.value || '',
-        roomNumber: document.getElementById('roomNumber')?.value || '',
-        diagnosis: document.getElementById('diagnosis')?.value || '',
-        status: 'active',
-        isbar: isbar,
-        medications: patient?.medications || [],
-        labs: patient?.labs || [],
-        radiology: patient?.radiology || [],
-        todos: patient?.todos || []
-    };
-}
-async function savePatient() {
-    try {
-        // حفظ البيانات الحالية أولاً
-        updatePatientFormData();
-        
-        const patientData = collectPatientFormData();
-        
-        if (state.selectedPatientId) {
-            // تحديث المريض الموجود
-            await PocketBaseService.PatientService.updatePatient(state.selectedPatientId, patientData);
-            showNotification(translate('تم تحديث بيانات المريض', 'Patient updated'), 'success');
-        } else {
-            // إضافة مريض جديد
-            const result = await PocketBaseService.PatientService.createPatient(patientData);
-            state.selectedPatientId = result.id; // تعيين ID جديد
-            showNotification(translate('تم إضافة المريض بنجاح', 'Patient added successfully'), 'success');
-        }
-        
-        // تحديث البيانات من السيرفر
-        await loadInitialData();
-        
-        // إعادة عرض البيانات مع الحفاظ على النافذة المفتوحة
-        render();
-        
-    } catch (error) {
-        console.error('Error saving patient:', error);
-        showNotification(translate('حدث خطأ في حفظ المريض', 'Error saving patient'), 'error');
+        return {
+            name: tempData.patientName || selectedPatient?.name || 'مريض جديد',
+            fileNumber: tempData.fileNumber || selectedPatient?.fileNumber || `MRN${Date.now().toString().slice(-6)}`,
+            age: tempData.age || selectedPatient?.age || '',
+            roomNumber: tempData.roomNumber || selectedPatient?.roomNumber || '',
+            diagnosis: tempData.diagnosis || selectedPatient?.diagnosis || '',
+            status: 'active',
+            isbar: isbar,
+            medications: selectedPatient?.medications || [],
+            labs: selectedPatient?.labs || [],
+            radiology: selectedPatient?.radiology || [],
+            todos: selectedPatient?.todos || []
+        };
     }
-}
-    // Delete patient
+
+    // حذف المريض
     async function deletePatient(patientId) {
         if (!confirm(translate('هل تريد حذف هذا المريض؟', 'Delete this patient?'))) {
             return;
@@ -1075,6 +1030,12 @@ async function savePatient() {
         try {
             await PocketBaseService.PatientService.deletePatient(patientId);
             showNotification(translate('تم حذف المريض', 'Patient deleted'), 'success');
+            
+            // مسح البيانات المؤقتة
+            if (state.tempPatientData[patientId]) {
+                delete state.tempPatientData[patientId];
+            }
+            
             await loadInitialData();
             render();
         } catch (error) {
@@ -1083,12 +1044,18 @@ async function savePatient() {
         }
     }
 
-    // Export PDF
+    // تصدير PDF
     async function exportPatientPDF() {
         try {
             const patient = state.patients.find(p => p.id === state.selectedPatientId);
             if (patient && window.PDFExport && window.PDFExport.exportHandoverPDF) {
-                window.PDFExport.exportHandoverPDF(patient, state.signature);
+                const receivingNurse = prompt(translate('أدخل اسم الممرض/الممرضة المستقبل:', 'Enter receiving nurse name:'), '___________________');
+                
+                if (receivingNurse === null) {
+                    return; // تم إلغاء العملية
+                }
+                
+                window.PDFExport.exportHandoverPDF(patient, state.signature, receivingNurse);
                 showNotification(translate('تم تصدير PDF', 'PDF exported'), 'success');
             }
         } catch (error) {
@@ -1097,7 +1064,7 @@ async function savePatient() {
         }
     }
 
-    // Toggle todo
+    // إدارة المهام
     async function toggleTodo(todoId) {
         try {
             await PocketBaseService.TodoService.toggleTodo(todoId);
@@ -1108,7 +1075,6 @@ async function savePatient() {
         }
     }
 
-    // Add todo
     async function addTodo() {
         const text = prompt(translate('المهمة:', 'Task:'));
         if (!text) return;
@@ -1128,7 +1094,6 @@ async function savePatient() {
         }
     }
 
-    // Delete todo
     async function deleteTodo(todoId) {
         try {
             await PocketBaseService.TodoService.deleteTodo(todoId);
@@ -1139,7 +1104,7 @@ async function savePatient() {
         }
     }
 
-    // Mark alert as read
+    // إدارة التنبيهات
     async function markAlertAsRead(alertId) {
         try {
             await PocketBaseService.AlertService.markAsRead(alertId);
@@ -1150,7 +1115,6 @@ async function savePatient() {
         }
     }
 
-    // Delete alert
     async function deleteAlert(alertId) {
         try {
             await PocketBaseService.AlertService.deleteAlert(alertId);
@@ -1161,7 +1125,6 @@ async function savePatient() {
         }
     }
 
-    // Clear all alerts
     async function clearAllAlerts() {
         if (!confirm(translate('هل تريد مسح جميع التنبيهات المقروءة؟', 'Clear all read alerts?'))) {
             return;
@@ -1177,7 +1140,7 @@ async function savePatient() {
         }
     }
 
-    // Add quick todo
+    // إضافة مهمة سريعة
     async function addQuickTodo() {
         const activePatients = state.patients.filter(p => p.status === 'active');
         if (activePatients.length === 0) {
@@ -1214,7 +1177,7 @@ async function savePatient() {
         }
     }
 
-    // Add quick event
+    // إضافة حدث سريع
     async function addQuickEvent() {
         const activePatients = state.patients.filter(p => p.status === 'active');
         if (activePatients.length === 0) {
@@ -1258,7 +1221,7 @@ async function savePatient() {
         }
     }
 
-    // Backup data
+    // نسخة احتياطية
     async function backupData() {
         try {
             const data = {
@@ -1287,7 +1250,7 @@ async function savePatient() {
         }
     }
 
-    // Import data
+    // استيراد البيانات
     async function importData() {
         const input = document.createElement('input');
         input.type = 'file';
@@ -1302,13 +1265,13 @@ async function savePatient() {
                 try {
                     const imported = JSON.parse(event.target.result);
                     
-                    // Import signature
+                    // استيراد التوقيع
                     if (imported.signature) {
                         state.signature = imported.signature;
                         localStorage.setItem('nuraithm_signature', imported.signature);
                     }
                     
-                    // Import patients
+                    // استيراد المرضى
                     if (imported.patients && Array.isArray(imported.patients)) {
                         for (const patient of imported.patients) {
                             await PocketBaseService.PatientService.createPatient(patient);
@@ -1329,7 +1292,7 @@ async function savePatient() {
         input.click();
     }
 
-    // Handle patient actions
+    // معالجة إجراءات المريض
     async function handlePatientAction(patientId, action) {
         const patient = state.patients.find(p => p.id === patientId);
         if (!patient) {
@@ -1341,44 +1304,62 @@ async function savePatient() {
             switch (action) {
                 case 'handover':
                     if (window.PDFExport && window.PDFExport.exportHandoverPDF) {
-                        window.PDFExport.exportHandoverPDF(patient, state.signature);
+                        const receivingNurse = prompt(translate('أدخل اسم الممرض/الممرضة المستقبل:', 'Enter receiving nurse name:'), '___________________');
+                        
+                        if (receivingNurse === null) {
+                            return; // تم إلغاء العملية
+                        }
+                        
+                        window.PDFExport.exportHandoverPDF(patient, state.signature, receivingNurse);
                         showNotification(translate('جاري تصدير PDF...', 'Exporting PDF...'), 'info');
                     }
                     break;
                     
                 case 'careplan':
                     showNotification(translate('جاري إنشاء خطة الرعاية...', 'Creating care plan...'), 'info');
-                    const carePlan = await DeepSeekService.generateCarePlan?.(patient, state.aiLang);
-                    if (carePlan && !carePlan.requiresApiKey) {
+                    const carePlan = await DeepSeekService.generateCarePlan(patient, state.aiLang);
+                    if (carePlan && carePlan.success) {
                         showNotification(translate('تم إنشاء خطة الرعاية', 'Care plan generated'), 'success');
                         showCarePlanModal(carePlan, patient.name);
+                    } else if (carePlan && carePlan.requiresApiKey) {
+                        showNotification(translate('مفتاح API مطلوب', 'API key required'), 'warning');
+                        window.showApiKeyModal();
                     }
                     break;
                     
                 case 'shift':
                     showNotification(translate('جاري إنشاء ملخص الشفت...', 'Creating shift summary...'), 'info');
-                    const shiftSummary = await DeepSeekService.generateShiftSummary?.(patient, state.aiLang);
-                    if (shiftSummary) {
+                    const shiftSummary = await DeepSeekService.generateShiftSummary(patient, state.aiLang);
+                    if (shiftSummary && shiftSummary.success) {
                         showNotification(translate('تم إنشاء ملخص الشفت', 'Shift summary generated'), 'success');
                         showShiftSummaryModal(shiftSummary, patient.name);
+                    } else if (shiftSummary && shiftSummary.requiresApiKey) {
+                        showNotification(translate('مفتاح API مطلوب', 'API key required'), 'warning');
+                        window.showApiKeyModal();
                     }
                     break;
                     
                 case 'medtable':
                     showNotification(translate('جاري تحليل الأدوية...', 'Analyzing medications...'), 'info');
-                    const medTable = await DeepSeekService.generateMedicationTable?.(patient, state.aiLang);
-                    if (medTable && !medTable.requiresApiKey) {
+                    const medTable = await DeepSeekService.generateMedicationTable(patient, state.aiLang);
+                    if (medTable && medTable.success) {
                         showNotification(translate('تم إنشاء جدول الأدوية', 'Medication table generated'), 'success');
                         showMedTableModal(medTable, patient.name);
+                    } else if (medTable && medTable.requiresApiKey) {
+                        showNotification(translate('مفتاح API مطلوب', 'API key required'), 'warning');
+                        window.showApiKeyModal();
                     }
                     break;
                     
                 case 'report':
                     showNotification(translate('جاري إنشاء التقرير...', 'Generating report...'), 'info');
-                    const report = await DeepSeekService.generatePatientReport?.(patient, state.aiLang);
-                    if (report) {
+                    const report = await DeepSeekService.generatePatientReport(patient, state.aiLang);
+                    if (report && report.success) {
                         showNotification(translate('تم إنشاء التقرير', 'Report generated'), 'success');
                         showReportModal(report, patient.name);
+                    } else if (report && report.requiresApiKey) {
+                        showNotification(translate('مفتاح API مطلوب', 'API key required'), 'warning');
+                        window.showApiKeyModal();
                     }
                     break;
             }
@@ -1388,7 +1369,7 @@ async function savePatient() {
         }
     }
 
-    // Generate AI alerts
+    // توليد تنبيهات الذكاء الاصطناعي
     async function generateAIAlerts(patientId) {
         const patient = state.patients.find(p => p.id === patientId);
         if (!patient) {
@@ -1398,24 +1379,29 @@ async function savePatient() {
 
         try {
             showNotification(translate('جاري تحليل المخاطر...', 'Analyzing risks...'), 'info');
-            const alerts = await DeepSeekService.generateClinicalAlerts?.(patient, state.aiLang);
+            const alerts = await DeepSeekService.generateClinicalAlerts(patient, state.aiLang);
             
-            if (alerts && Array.isArray(alerts)) {
-                // Save alerts to PocketBase
+            if (alerts && !alerts.requiresApiKey && Array.isArray(alerts)) {
+                // حفظ التنبيهات في PocketBase
                 for (const alert of alerts) {
                     await PocketBaseService.AlertService.createAlert({
                         title: alert.title,
                         message: alert.message,
                         category: alert.category,
+                        priority: alert.priority,
                         read: false,
                         patientId: patient.id,
-                        patientName: patient.name
+                        patientName: patient.name,
+                        source: 'ai'
                     });
                 }
                 
                 showNotification(translate('تم توليد التنبيهات', 'Alerts generated'), 'success');
                 await loadInitialData();
                 render();
+            } else if (alerts && alerts.requiresApiKey) {
+                showNotification(translate('مفتاح API مطلوب', 'API key required'), 'warning');
+                window.showApiKeyModal();
             }
         } catch (error) {
             console.error('Generate alerts error:', error);
@@ -1423,7 +1409,7 @@ async function savePatient() {
         }
     }
 
-    // Handover patient
+    // تسليم المريض
     async function handoverPatient(patientId) {
         const patient = state.patients.find(p => p.id === patientId);
         if (!patient) {
@@ -1457,7 +1443,7 @@ async function savePatient() {
         }
     }
 
-    // Receive patient
+    // استلام المريض
     async function receivePatient(patientId) {
         const patient = state.patients.find(p => p.id === patientId);
         if (!patient) {
@@ -1479,7 +1465,7 @@ async function savePatient() {
         }
     }
 
-    // Helper Functions
+    // دوال مساعدة
     function showNotification(message, type = 'info') {
         const existingNotification = document.getElementById('app-notification');
         if (existingNotification) {
@@ -1522,36 +1508,27 @@ async function savePatient() {
     
     function showCarePlanModal(carePlan, patientName) {
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
         modal.innerHTML = `
             <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-                <div class="bg-primary p-6 text-white flex justify-between items-center">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
                     <h3 class="text-xl font-black">${translate('خطة الرعاية التمريضية', 'Nursing Care Plan')} - ${patientName}</h3>
                     <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
                         <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
+                
                 <div class="p-6 overflow-auto max-h-[70vh]">
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr class="bg-primary text-white">
-                                ${carePlan.headers.map(header => `<th class="p-3 text-right">${header}</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${carePlan.rows.map(row => `
-                                <tr class="border-b dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                    ${row.map(cell => `<td class="p-3">${cell}</td>`).join('')}
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                    <div class="prose dark:prose-invert max-w-none">
+                        <pre class="whitespace-pre-wrap font-cairo text-sm text-slate-900 dark:text-white">${carePlan.content}</pre>
+                    </div>
                 </div>
+                
                 <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
-                    <button onclick="exportCarePlanPDF()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold">
+                    <button onclick="exportCarePlanPDF()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl">
                         ${translate('تصدير PDF', 'Export PDF')}
                     </button>
-                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-primary text-white rounded-xl font-bold">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-primary text-white rounded-xl">
                         ${translate('إغلاق', 'Close')}
                     </button>
                 </div>
@@ -1563,10 +1540,9 @@ async function savePatient() {
             if (window.PDFExport && window.PDFExport.exportReportPDF) {
                 window.PDFExport.exportReportPDF(
                     translate('خطة الرعاية التمريضية', 'Nursing Care Plan'),
-                    '',
+                    carePlan.content,
                     `CarePlan_${patientName}_${Date.now()}`,
-                    state.signature,
-                    carePlan
+                    state.signature
                 );
             }
         };
@@ -1574,25 +1550,27 @@ async function savePatient() {
     
     function showShiftSummaryModal(summary, patientName) {
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
         modal.innerHTML = `
             <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
-                <div class="bg-primary p-6 text-white flex justify-between items-center">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
                     <h3 class="text-xl font-black">${translate('ملخص الشفت', 'Shift Summary')} - ${patientName}</h3>
                     <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
                         <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
+                
                 <div class="p-6 overflow-auto max-h-[70vh]">
                     <div class="prose dark:prose-invert max-w-none">
-                        <pre class="whitespace-pre-wrap font-cairo text-sm text-slate-900 dark:text-white">${summary}</pre>
+                        <pre class="whitespace-pre-wrap font-cairo text-sm text-slate-900 dark:text-white">${summary.content}</pre>
                     </div>
                 </div>
+                
                 <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
-                    <button onclick="copyToClipboard('${summary.replace(/'/g, "\\'")}')" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold">
+                    <button onclick="copyToClipboard('${summary.content.replace(/'/g, "\\'")}')" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl">
                         ${translate('نسخ', 'Copy')}
                     </button>
-                    <button onclick="exportShiftSummaryPDF()" class="px-6 py-2 bg-primary text-white rounded-xl font-bold">
+                    <button onclick="exportShiftSummaryPDF()" class="px-6 py-2 bg-primary text-white rounded-xl">
                         ${translate('تصدير PDF', 'Export PDF')}
                     </button>
                 </div>
@@ -1604,7 +1582,7 @@ async function savePatient() {
             if (window.PDFExport && window.PDFExport.exportReportPDF) {
                 window.PDFExport.exportReportPDF(
                     translate('ملخص الشفت', 'Shift Summary'),
-                    summary,
+                    summary.content,
                     `ShiftSummary_${patientName}_${Date.now()}`,
                     state.signature
                 );
@@ -1614,36 +1592,44 @@ async function savePatient() {
     
     function showMedTableModal(medTable, patientName) {
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
         modal.innerHTML = `
             <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
-                <div class="bg-primary p-6 text-white flex justify-between items-center">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
                     <h3 class="text-xl font-black">${translate('جدول الأدوية الذكي', 'Smart Medication Table')} - ${patientName}</h3>
                     <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
                         <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
+                
                 <div class="p-6 overflow-auto max-h-[70vh]">
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr class="bg-primary text-white">
-                                ${medTable.headers.map(header => `<th class="p-3 text-right">${header}</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${medTable.rows.map(row => `
-                                <tr class="border-b dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                    ${row.map(cell => `<td class="p-3">${cell}</td>`).join('')}
+                    ${medTable.tableData && medTable.tableData.headers ? `
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-primary text-white">
+                                    ${medTable.tableData.headers.map(header => `<th class="p-3 text-right">${header}</th>`).join('')}
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${medTable.tableData.rows.map(row => `
+                                    <tr class="border-b dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                        ${row.map(cell => `<td class="p-3">${cell}</td>`).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    ` : `
+                        <div class="prose dark:prose-invert max-w-none">
+                            <pre class="whitespace-pre-wrap font-cairo text-sm text-slate-900 dark:text-white">${medTable.content}</pre>
+                        </div>
+                    `}
                 </div>
+                
                 <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
-                    <button onclick="exportMedTablePDF()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold">
+                    <button onclick="exportMedTablePDF()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl">
                         ${translate('تصدير PDF', 'Export PDF')}
                     </button>
-                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-primary text-white rounded-xl font-bold">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-primary text-white rounded-xl">
                         ${translate('إغلاق', 'Close')}
                     </button>
                 </div>
@@ -1652,13 +1638,11 @@ async function savePatient() {
         document.body.appendChild(modal);
         
         window.exportMedTablePDF = function() {
-            if (window.PDFExport && window.PDFExport.exportReportPDF) {
-                window.PDFExport.exportReportPDF(
-                    translate('جدول الأدوية الذكي', 'Smart Medication Table'),
-                    '',
-                    `MedTable_${patientName}_${Date.now()}`,
-                    state.signature,
-                    medTable
+            if (window.PDFExport && window.PDFExport.exportMedicationTablePDF) {
+                window.PDFExport.exportMedicationTablePDF(
+                    state.patients.find(p => p.name === patientName),
+                    medTable.tableData,
+                    state.signature
                 );
             }
         };
@@ -1666,25 +1650,27 @@ async function savePatient() {
     
     function showReportModal(report, patientName) {
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4';
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
         modal.innerHTML = `
             <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-                <div class="bg-primary p-6 text-white flex justify-between items-center">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
                     <h3 class="text-xl font-black">${translate('تقرير طبي شامل', 'Comprehensive Medical Report')} - ${patientName}</h3>
                     <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
                         <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
+                
                 <div class="p-6 overflow-auto max-h-[70vh]">
                     <div class="prose dark:prose-invert max-w-none">
-                        <pre class="whitespace-pre-wrap font-cairo text-sm text-slate-900 dark:text-white">${report}</pre>
+                        <pre class="whitespace-pre-wrap font-cairo text-sm text-slate-900 dark:text-white">${report.content}</pre>
                     </div>
                 </div>
+                
                 <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
-                    <button onclick="exportReportPDF()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold">
+                    <button onclick="exportReportPDF()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl">
                         ${translate('تصدير PDF', 'Export PDF')}
                     </button>
-                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-primary text-white rounded-xl font-bold">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-primary text-white rounded-xl">
                         ${translate('إغلاق', 'Close')}
                     </button>
                 </div>
@@ -1696,7 +1682,7 @@ async function savePatient() {
             if (window.PDFExport && window.PDFExport.exportReportPDF) {
                 window.PDFExport.exportReportPDF(
                     translate('تقرير طبي شامل', 'Comprehensive Medical Report'),
-                    report,
+                    report.content,
                     `MedicalReport_${patientName}_${Date.now()}`,
                     state.signature
                 );
@@ -1704,6 +1690,313 @@ async function savePatient() {
         };
     }
 
+    // النوافذ المنبثقة للأدوية والتحاليل والأشعة
+    function showMedicationModal(patientId) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
+                    <h3 class="text-xl font-black">إضافة دواء جديد</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">اسم الدواء</label>
+                        <input type="text" id="med-name" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الجرعة</label>
+                            <input type="text" id="med-dosage" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="500mg">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">التكرار</label>
+                            <input type="text" id="med-frequency" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="كل 8 ساعات">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">طريقة الاستعمال</label>
+                        <select id="med-route" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                            <option value="oral">فموي</option>
+                            <option value="iv">وريدي</option>
+                            <option value="im">عضلي</option>
+                            <option value="sc">تحت الجلد</option>
+                            <option value="topical">موضعي</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ملاحظات</label>
+                        <textarea id="med-notes" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="2"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">تاريخ البدء</label>
+                        <input type="date" id="med-start-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                    </div>
+                </div>
+                
+                <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                        إلغاء
+                    </button>
+                    <button onclick="saveMedication('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
+                        حفظ الدواء
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    async function saveMedication(patientId) {
+        const medication = {
+            name: document.getElementById('med-name').value,
+            dosage: document.getElementById('med-dosage').value,
+            frequency: document.getElementById('med-frequency').value,
+            route: document.getElementById('med-route').value,
+            notes: document.getElementById('med-notes').value,
+            startDate: document.getElementById('med-start-date').value,
+            createdAt: new Date().toISOString()
+        };
+        
+        if (!medication.name || !medication.dosage) {
+            showNotification('الرجاء إدخال اسم الدواء والجرعة', 'warning');
+            return;
+        }
+        
+        try {
+            const patient = state.patients.find(p => p.id === patientId);
+            const updatedMedications = [...(patient.medications || []), medication];
+            
+            await PocketBaseService.PatientService.updatePatient(patientId, {
+                medications: updatedMedications
+            });
+            
+            showNotification('تم إضافة الدواء بنجاح', 'success');
+            await loadInitialData();
+            render();
+            
+            const modal = document.querySelector('.fixed.inset-0.z-50');
+            if (modal) modal.remove();
+            
+        } catch (error) {
+            console.error('Error saving medication:', error);
+            showNotification('خطأ في حفظ الدواء', 'error');
+        }
+    }
+
+    function showLabModal(patientId) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
+                    <h3 class="text-xl font-black">إضافة تحليل جديد</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">نوع التحليل</label>
+                        <input type="text" id="lab-type" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="CBC, Creatinine, etc.">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">القيمة</label>
+                            <input type="text" id="lab-value" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الوحدة</label>
+                            <input type="text" id="lab-unit" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="mg/dL, mmol/L">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">النطاق المرجعي</label>
+                        <input type="text" id="lab-range" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="3.5-5.5">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">التاريخ</label>
+                        <input type="datetime-local" id="lab-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ملاحظات</label>
+                        <textarea id="lab-notes" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="2"></textarea>
+                    </div>
+                </div>
+                
+                <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                        إلغاء
+                    </button>
+                    <button onclick="saveLabTest('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
+                        حفظ التحليل
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    async function saveLabTest(patientId) {
+        const labTest = {
+            type: document.getElementById('lab-type').value,
+            value: document.getElementById('lab-value').value,
+            unit: document.getElementById('lab-unit').value,
+            range: document.getElementById('lab-range').value,
+            date: document.getElementById('lab-date').value || new Date().toISOString(),
+            notes: document.getElementById('lab-notes').value,
+            createdAt: new Date().toISOString()
+        };
+        
+        if (!labTest.type || !labTest.value) {
+            showNotification('الرجاء إدخال نوع التحليل والقيمة', 'warning');
+            return;
+        }
+        
+        try {
+            const patient = state.patients.find(p => p.id === patientId);
+            const updatedLabs = [...(patient.labs || []), labTest];
+            
+            await PocketBaseService.PatientService.updatePatient(patientId, {
+                labs: updatedLabs
+            });
+            
+            showNotification('تم إضافة التحليل بنجاح', 'success');
+            await loadInitialData();
+            render();
+            
+            const modal = document.querySelector('.fixed.inset-0.z-50');
+            if (modal) modal.remove();
+            
+        } catch (error) {
+            console.error('Error saving lab test:', error);
+            showNotification('خطأ في حفظ التحليل', 'error');
+        }
+    }
+
+    function showRadiologyModal(patientId) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
+                    <h3 class="text-xl font-black">إضافة أشعة جديدة</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">نوع الأشعة</label>
+                        <select id="rad-type" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                            <option value="xray">أشعة سينية</option>
+                            <option value="ct">أشعة مقطعية</option>
+                            <option value="mri">رنين مغناطيسي</option>
+                            <option value="ultrasound">سونار</option>
+                            <option value="echo">إيكو</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">المنطقة</label>
+                        <input type="text" id="rad-area" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="الصدر، البطن، الدماغ">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">النتيجة</label>
+                        <textarea id="rad-result" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="3" placeholder="تقرير الأشعة..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">الطبيب المشخص</label>
+                        <input type="text" id="rad-doctor" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">التاريخ</label>
+                        <input type="date" id="rad-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                    </div>
+                </div>
+                
+                <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                        إلغاء
+                    </button>
+                    <button onclick="saveRadiology('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
+                        حفظ الأشعة
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    async function saveRadiology(patientId) {
+        const radiology = {
+            type: document.getElementById('rad-type').value,
+            area: document.getElementById('rad-area').value,
+            result: document.getElementById('rad-result').value,
+            doctor: document.getElementById('rad-doctor').value,
+            date: document.getElementById('rad-date').value || new Date().toISOString(),
+            createdAt: new Date().toISOString()
+        };
+        
+        if (!radiology.type || !radiology.area) {
+            showNotification('الرجاء إدخال نوع الأشعة والمنطقة', 'warning');
+            return;
+        }
+        
+        try {
+            const patient = state.patients.find(p => p.id === patientId);
+            const updatedRadiology = [...(patient.radiology || []), radiology];
+            
+            await PocketBaseService.PatientService.updatePatient(patientId, {
+                radiology: updatedRadiology
+            });
+            
+            showNotification('تم إضافة الأشعة بنجاح', 'success');
+            await loadInitialData();
+            render();
+            
+            const modal = document.querySelector('.fixed.inset-0.z-50');
+            if (modal) modal.remove();
+            
+        } catch (error) {
+            console.error('Error saving radiology:', error);
+            showNotification('خطأ في حفظ الأشعة', 'error');
+        }
+    }
+
+    // دالة النسخ إلى الحافظة
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showNotification('تم النسخ إلى الحافظة', 'success');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+            showNotification('فشل النسخ', 'error');
+        });
+    }
+
+    // الحصول على الإحصائيات
     function getStats() {
         return {
             total: state.patients.length,
@@ -1714,6 +2007,7 @@ async function savePatient() {
         };
     }
 
+    // الحصول على المرضى المفلترة
     function getFilteredPatients() {
         return state.patients.filter(patient => {
             const matchesStatus = patient.status === state.activeTab;
@@ -1725,19 +2019,19 @@ async function savePatient() {
         });
     }
 
-    // Render Functions
+    // دوال العرض
     function renderAuthRequired() {
         elements.app.innerHTML = `
             <div class="flex flex-col items-center justify-center min-h-screen p-4">
                 <div class="text-center max-w-md">
-                    <div class="w-24 h-24 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <span class="material-symbols-outlined text-primary text-4xl">medical_services</span>
+                    <div class="w-24 h-24 bg-gradient-orange rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <span class="material-symbols-outlined text-white text-4xl">medical_services</span>
                     </div>
                     <h1 class="text-2xl font-black text-slate-900 dark:text-white mb-3">Nuraithm</h1>
                     <p class="text-slate-600 dark:text-slate-400 mb-8">
                         ${translate('نظام التسليم السريري الذكي باستخدام الذكاء الاصطناعي', 'AI-powered clinical handover system')}
                     </p>
-                    <button onclick="window.showAuthModal()" class="bg-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-primary/90 transition-all w-full">
+                    <button onclick="window.showAuthModal()" class="bg-gradient-orange text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all w-full">
                         ${translate('تسجيل الدخول للبدء', 'Login to Start')}
                     </button>
                     <p class="text-sm text-slate-500 mt-4">
@@ -1774,10 +2068,10 @@ async function savePatient() {
                 <div class="flex items-center justify-center min-h-screen">
                     <div class="text-center p-8">
                         <div class="text-red-500 text-4xl mb-4">⚠️</div>
-                        <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Render Error</h1>
+                        <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">خطأ في العرض</h1>
                         <p class="text-gray-600 dark:text-gray-300 mb-4">${error.message}</p>
                         <button onclick="location.reload()" class="px-6 py-2 bg-primary text-white rounded-lg">
-                            Reload Page
+                            إعادة تحميل الصفحة
                         </button>
                     </div>
                 </div>
@@ -1785,7 +2079,7 @@ async function savePatient() {
         }
     }
 
-    // Main render function
+    // دالة العرض الرئيسية
     function renderApp(props) {
         const { state, stats, filteredPatients, translate } = props;
         
@@ -1801,10 +2095,10 @@ async function savePatient() {
             
             ${state.isModalOpen ? renderPatientModal(state, props.selectedPatient, translate) : ''}
             
-            <!-- API Key Status Bar -->
+            <!-- شريط حالة مفتاح API -->
             ${!state.apiKeyConfigured ? `
                 <div class="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-40">
-                    <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div class="bg-gradient-to-r from-primary to-secondary text-white p-4 rounded-2xl shadow-xl flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-2xl">auto_awesome</span>
                             <div>
@@ -1813,7 +2107,7 @@ async function savePatient() {
                             </div>
                         </div>
                         <button onclick="window.showApiKeyModal()" 
-                                class="px-4 py-2 bg-white text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition-all">
+                                class="px-4 py-2 bg-white text-primary rounded-xl font-bold hover:opacity-90 transition-all">
                             ${translate('تفعيل الآن', 'Activate Now')}
                         </button>
                     </div>
@@ -1826,10 +2120,10 @@ async function savePatient() {
         return `
             <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 py-3 shadow-sm">
                 <div class="max-w-7xl mx-auto flex justify-between items-center">
-                    <!-- Logo and User -->
+                    <!-- الشعار والمستخدم -->
                     <div class="flex items-center gap-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 transform transition-transform hover:rotate-6 cursor-pointer border-2 border-accent-yellow/50">
+                            <div class="w-11 h-11 bg-gradient-orange rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 transform transition-transform hover:rotate-6 cursor-pointer border-2 border-accent/50">
                                 <span class="text-white text-2xl font-black font-inter">N</span>
                             </div>
                             <div>
@@ -1840,7 +2134,7 @@ async function savePatient() {
                             </div>
                         </div>
                         
-                        <!-- User Info -->
+                        <!-- معلومات المستخدم -->
                         <div class="flex items-center gap-2">
                             <div class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                                 <span class="material-symbols-outlined text-primary text-sm">person</span>
@@ -1852,9 +2146,9 @@ async function savePatient() {
                         </div>
                     </div>
 
-                    <!-- Actions -->
+                    <!-- الإجراءات -->
                     <div class="flex items-center gap-3">
-                        <!-- Alerts Button -->
+                        <!-- زر التنبيهات -->
                         <button data-view="alerts" class="relative w-11 h-11 flex items-center justify-center bg-slate-100 dark:bg-slate-900 rounded-xl group transition-all hover:bg-red-50 dark:hover:bg-red-950/20">
                             <span class="material-symbols-outlined transition-colors ${stats.alerts > 0 ? 'text-red-500 animate-pulse' : 'text-slate-600 dark:text-slate-400'}">
                                 notifications
@@ -1869,16 +2163,16 @@ async function savePatient() {
                             ` : ''}
                         </button>
 
-                        <!-- User Menu -->
+                        <!-- قائمة المستخدم -->
                         <div class="relative">
                             <button id="settings-toggle" class="w-11 h-11 flex items-center justify-center bg-slate-100 dark:bg-slate-900 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 transition-all">
                                 <span class="material-symbols-outlined text-slate-600 dark:text-white">person</span>
                             </button>
                             
-                            <!-- Settings Dropdown -->
+                            <!-- القائمة المنسدلة للإعدادات -->
                             <div id="settings-dropdown" class="hidden absolute top-14 ${state.lang === 'ar' ? 'left-0' : 'right-0'} w-72 bg-white dark:bg-slate-900 p-5 rounded-[2rem] shadow-2xl border border-slate-200 dark:border-slate-800 z-50">
                                 <div class="space-y-4">
-                                    <!-- User Info -->
+                                    <!-- معلومات المستخدم -->
                                     <div class="text-center pb-4 border-b dark:border-slate-800">
                                         <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
                                             <span class="material-symbols-outlined text-primary text-2xl">person</span>
@@ -1887,20 +2181,20 @@ async function savePatient() {
                                         <p class="text-xs text-slate-500">${state.currentUser?.email || ''}</p>
                                     </div>
                                     
-                                    <!-- User Actions -->
+                                    <!-- إجراءات المستخدم -->
                                     <div class="space-y-2">
                                         <button data-profile class="w-full py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
                                             <span class="material-symbols-outlined text-lg">manage_accounts</span>
                                             ${translate('الملف الشخصي', 'Profile')}
                                         </button>
                                         
-                                        <!-- Signature Settings -->
+                                        <!-- إعدادات التوقيع -->
                                         <button data-signature-settings class="w-full py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all">
                                             <span class="material-symbols-outlined text-lg">edit_document</span>
                                             ${translate('إعدادات التوقيع', 'Signature Settings')}
                                         </button>
                                         
-                                        <!-- Language Settings -->
+                                        <!-- إعدادات اللغة -->
                                         <div class="pt-2 border-t dark:border-slate-800 space-y-2">
                                             <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800 p-2 rounded-xl">
                                                 <span class="text-[10px] font-black text-slate-500 uppercase">
@@ -1920,7 +2214,7 @@ async function savePatient() {
                                             </div>
                                         </div>
                                         
-                                        <!-- Dark Mode Toggle -->
+                                        <!-- تبديل الوضع الداكن -->
                                         <button data-dark-mode-toggle class="w-full py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
                                             <span class="material-symbols-outlined text-lg">
                                                 ${state.darkMode ? 'light_mode' : 'dark_mode'}
@@ -1931,14 +2225,14 @@ async function savePatient() {
                                             }
                                         </button>
                                         
-                                        <!-- API Key Configuration -->
+                                        <!-- تكوين مفتاح API -->
                                         <button onclick="window.showApiKeyModal()" 
                                                 class="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:opacity-90 transition-all">
                                             <span class="material-symbols-outlined text-lg">key</span>
                                             ${translate('تكوين مفتاح API', 'Configure API Key')}
                                         </button>
                                         
-                                        <!-- Logout -->
+                                        <!-- تسجيل الخروج -->
                                         <button data-logout class="w-full py-3 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-red-200 dark:hover:bg-red-900/40 transition-all">
                                             <span class="material-symbols-outlined text-lg">logout</span>
                                             ${translate('تسجيل الخروج', 'Logout')}
@@ -1956,7 +2250,7 @@ async function savePatient() {
     function renderDashboard(state, stats, filteredPatients, translate) {
         return `
             <div class="space-y-6">
-                <!-- Stats Grid - متجاوب للهواتف -->
+                <!-- شبكة الإحصائيات -->
                 <div class="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4">
                     ${renderStatCard('group', translate('إجمالي المرضى', 'Total Patients'), stats.total, 'bg-blue-500')}
                     ${renderStatCard('clinical_notes', translate('نشطين', 'Active'), stats.active, 'bg-green-500')}
@@ -1965,7 +2259,7 @@ async function savePatient() {
                     ${renderStatCard('task_alt', translate('مهام', 'Tasks'), stats.todos, 'bg-purple-500')}
                 </div>
                 
-                <!-- Patient Tabs -->
+                <!-- تبويبات المرضى -->
                 <div class="flex bg-slate-200 dark:bg-slate-900 p-1.5 rounded-2xl w-full max-w-md">
                     <button data-patient-tab="active" class="flex-1 py-3 text-xs font-black transition-all rounded-xl ${state.activeTab === 'active' ? 'bg-primary text-white shadow-lg' : 'text-slate-500'}">
                         ${translate('المرضى الحاليين', 'ACTIVE PATIENTS')} (${stats.active})
@@ -1975,7 +2269,7 @@ async function savePatient() {
                     </button>
                 </div>
 
-                <!-- Search and Actions -->
+                <!-- البحث والإجراءات -->
                 <div class="flex flex-wrap items-center gap-4">
                     <div class="relative flex-1 min-w-[300px]">
                         <span class="material-symbols-outlined absolute ${state.lang === 'ar' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-400">
@@ -1988,9 +2282,7 @@ async function savePatient() {
                             value="${state.searchQuery}"
                             class="w-full ${state.lang === 'ar' ? 'pr-12 pl-6' : 'pl-12 pr-6'} py-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 outline-none focus:ring-2 ring-primary/20 text-slate-950 dark:text-white font-bold"
                         />
-                        
                     </div>
-
                     
                     <div class="flex gap-2">
                         <button data-quick-add-todo title="${translate('إضافة مهمة', 'Add Task')}" class="bg-orange-500 text-white w-14 h-14 rounded-2xl shadow-lg flex items-center justify-center hover:scale-105 transition-all">
@@ -2007,15 +2299,8 @@ async function savePatient() {
                         </button>
                     </div>
                 </div>
- 
-                
-                <!-- Tasks Section - يأخذ مسافة واحدة -->
-                <div class="lg:col-span-1">
-                    ${renderTasksSection()}
-                </div>
-            </div>
-        </div>
-                <!-- Patients Grid -->
+
+                <!-- شبكة المرضى -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     ${filteredPatients.length > 0 
                         ? filteredPatients.map(patient => renderPatientCard(patient, state, translate)).join('')
@@ -2024,6 +2309,11 @@ async function savePatient() {
                             translate('قم بإضافة مريض جديد لبدء العمل', 'Add a new patient to get started')
                           )
                     }
+                </div>
+                
+                <!-- قسم المهام -->
+                <div class="mt-8">
+                    ${renderTasksSection()}
                 </div>
             </div>
         `;
@@ -2053,16 +2343,16 @@ async function savePatient() {
         const todosCount = patient.todos?.filter(t => !t.completed).length || 0;
 
         return `
-            <div data-patient-id="${patient.id}" class="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-8 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
+            <div data-patient-id="${patient.id}" class="patient-card p-6 relative overflow-hidden">
                 
-                <!-- Status Badge -->
+                <!-- شارة الحالة -->
                 <div class="absolute top-4 left-4">
                     <div class="inline-block px-4 py-1.5 rounded-full text-[10px] font-black ${isActive ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
                         ${isActive ? translate('نشط', 'ACTIVE') : translate('مسلم', 'DISCHARGED')}
                     </div>
                 </div>
                 
-                <!-- Risk Indicators -->
+                <!-- مؤشرات المخاطر -->
                 <div class="absolute top-4 right-4 flex gap-2">
                     ${patient.isbar?.background?.allergy && patient.isbar.background.allergy.toLowerCase() !== 'لا يوجد' && patient.isbar.background.allergy.toLowerCase() !== 'none' ? `
                         <div class="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg flex items-center justify-center" title="${translate('حساسية', 'Allergy')}">
@@ -2083,7 +2373,7 @@ async function savePatient() {
                     ` : ''}
                 </div>
 
-                <!-- Patient Info -->
+                <!-- معلومات المريض -->
                 <div class="mb-6">
                     <h3 class="text-2xl font-black text-slate-950 dark:text-white mb-1 hover:text-primary cursor-pointer" data-edit-patient>
                         ${patient.name}
@@ -2093,7 +2383,7 @@ async function savePatient() {
                     </p>
                 </div>
 
-                <!-- Diagnosis -->
+                <!-- التشخيص -->
                 <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl mb-6 border dark:border-slate-800">
                     <p class="text-xs font-bold text-slate-700 dark:text-slate-300 line-clamp-2">
                         ${patient.diagnosis || translate('لا يوجد تشخيص مسجل', 'No diagnosis recorded')}
@@ -2110,7 +2400,7 @@ async function savePatient() {
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
+                <!-- أزرار الإجراءات -->
                 <div class="grid grid-cols-5 gap-2 mb-6">
                     <button data-patient-action="careplan" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 p-3 rounded-xl flex flex-col items-center gap-1 hover:scale-105 transition-all shadow-sm" title="${translate('خطة الرعاية', 'Care Plan')}">
                         <span class="material-symbols-outlined text-lg">analytics</span>
@@ -2134,7 +2424,7 @@ async function savePatient() {
                     </button>
                 </div>
 
-                <!-- Footer Actions -->
+                <!-- إجراءات التذييل -->
                 <div class="flex justify-between items-center pt-6 border-t dark:border-slate-800">
                     <div class="flex gap-2">
                         <button data-edit-patient class="text-xs font-black text-primary flex items-center gap-2">
@@ -2162,13 +2452,138 @@ async function savePatient() {
         `;
     }
 
+    function renderTasksSection() {
+        const activeTodos = state.todos.filter(t => !t.completed);
+        const completedTodos = state.todos.filter(t => t.completed);
+        
+        return `
+            <section class="mt-8">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow">
+                    
+                    <!-- الرأس -->
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v14l-5-3-5 3V6a2 2 0 00-2-2z"/>
+                            </svg>
+                            قائمة المهام
+                        </h3>
+
+                        <button data-add-task
+                            class="px-4 py-2 bg-primary text-white rounded-lg text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            إضافة مهمة
+                        </button>
+                    </div>
+
+                    <!-- المحتوى -->
+                    <div class="p-6">
+                        ${state.todos.length === 0 ? `
+                            <div class="text-center py-8">
+                                <p class="text-gray-500 mb-4">لا توجد مهام حالياً</p>
+                                <button data-add-task
+                                    class="px-6 py-2 bg-primary text-white rounded-lg flex items-center gap-2 mx-auto">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    إضافة أول مهمة
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="space-y-3">
+                                ${activeTodos.map(todo => `
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                                        data-task-id="${todo.id}">
+                                        
+                                        <div class="flex items-start gap-3">
+                                            <input type="checkbox"
+                                                class="h-5 w-5 mt-1"
+                                                ${todo.completed ? 'checked' : ''}
+                                                onchange="window.NuraithmApp.toggleTask('${todo.id}')">
+
+                                            <div>
+                                                <p class="${todo.completed ? 'line-through text-gray-500' : ''}">
+                                                    ${todo.text}
+                                                </p>
+
+                                                ${todo.patientName ? `
+                                                    <p class="text-sm text-primary mt-1 flex items-center gap-1">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M15 7a3 3 0 11-6 0 3 3 0 016 0zM4 21a8 8 0 0116 0"/>
+                                                        </svg>
+                                                        ${todo.patientName}
+                                                    </p>
+                                                ` : ''}
+
+                                                ${todo.dueDate ? `
+                                                    <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                        </svg>
+                                                        ${new Date(todo.dueDate).toLocaleDateString('ar-EG')}
+                                                    </p>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+
+                                        <button onclick="window.NuraithmApp.deleteTask('${todo.id}')"
+                                            class="text-red-500 hover:text-red-700">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-6 4h8"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                `).join('')}
+
+                                ${completedTodos.length > 0 ? `
+                                    <div class="mt-6">
+                                        <h4 class="font-bold mb-3">
+                                            المهام المنتهية (${completedTodos.length})
+                                        </h4>
+
+                                        <div class="space-y-3">
+                                            ${completedTodos.map(todo => `
+                                                <div class="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-600 rounded-lg"
+                                                    data-task-id="${todo.id}">
+                                                    
+                                                    <div class="flex items-center gap-3">
+                                                        <input type="checkbox" checked disabled class="h-5 w-5">
+                                                        <p class="line-through text-gray-500">${todo.text}</p>
+                                                    </div>
+
+                                                    <button onclick="window.NuraithmApp.deleteTask('${todo.id}')"
+                                                        class="text-red-500 hover:text-red-700">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-6 4h8"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
     function renderAlertsPage(state, translate) {
         const unreadAlerts = state.alerts.filter(a => !a.read);
         const readAlerts = state.alerts.filter(a => a.read);
         
         return `
             <div class="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-                <!-- Header -->
+                <!-- الرأس -->
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-4">
                         <button data-view="dashboard" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-white transition-all hover:bg-slate-200">
@@ -2197,7 +2612,7 @@ async function savePatient() {
                     </div>
                 </div>
 
-                <!-- Stats -->
+                <!-- الإحصائيات -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border dark:border-slate-800">
                         <div class="flex items-center gap-3">
@@ -2245,9 +2660,9 @@ async function savePatient() {
                     </div>
                 </div>
 
-                <!-- Alerts Grid -->
+                <!-- شبكة التنبيهات -->
                 <div class="space-y-8">
-                    <!-- Unread Alerts -->
+                    <!-- التنبيهات غير المقروءة -->
                     ${unreadAlerts.length > 0 ? `
                         <section>
                             <h3 class="text-lg font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
@@ -2261,7 +2676,7 @@ async function savePatient() {
                         </section>
                     ` : ''}
                     
-                    <!-- Read Alerts -->
+                    <!-- التنبيهات المقروءة -->
                     ${readAlerts.length > 0 ? `
                         <section>
                             <h3 class="text-lg font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
@@ -2283,9 +2698,11 @@ async function savePatient() {
                             <p class="text-slate-500 max-w-md mx-auto">
                                 ${translate('جميع الأمور تحت السيطرة! سيظهر هنا أي تحذيرات أو نصائح سريرية جديدة.', 'All clear! Any new clinical warnings or tips will appear here.')}
                             </p>
-                            <button onclick="window.NuraithmApp.generateAIAlerts('${state.patients[0]?.id || ''}')" class="mt-6 px-6 py-3 bg-primary text-white rounded-xl font-bold">
-                                ${translate('توليد تنبيهات ذكية', 'Generate Smart Alerts')}
-                            </button>
+                            ${state.patients.length > 0 ? `
+                                <button onclick="window.NuraithmApp.generateAIAlerts('${state.patients[0]?.id || ''}')" class="mt-6 px-6 py-3 bg-primary text-white rounded-xl font-bold">
+                                    ${translate('توليد تنبيهات ذكية', 'Generate Smart Alerts')}
+                                </button>
+                            ` : ''}
                         </div>
                     ` : ''}
                 </div>
@@ -2341,18 +2758,11 @@ async function savePatient() {
 
     function renderPatientModal(state, patient, translate) {
         const isNew = !patient;
-        const isbar = patient?.isbar || {
-            identification: {},
-            situation: {},
-            background: {},
-            assessment: {},
-            recommendations: {},
-            nursing: {}
-        };
+        const tempData = state.tempPatientData[state.selectedPatientId] || {};
         
         return `
             <div class="fixed inset-0 z-50 flex flex-col bg-white dark:bg-slate-950">
-                <!-- Header -->
+                <!-- الرأس -->
                 <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center shadow-lg">
                     <div class="flex items-center gap-4">
                         <button data-close-modal class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-all">
@@ -2364,16 +2774,19 @@ async function savePatient() {
                         </div>
                     </div>
                     <div class="flex gap-2">
+                        <button data-save-temp class="bg-white/10 px-6 py-2 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-white/20 transition-all">
+                            <span class="material-symbols-outlined text-sm">save</span> ${translate('حفظ مؤقت', 'Save Temp')}
+                        </button>
                         <button data-export-pdf class="bg-white/10 px-6 py-2 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-white/20 transition-all">
                             <span class="material-symbols-outlined text-sm">picture_as_pdf</span> PDF
                         </button>
-                        <button data-save-patient class="bg-accent-yellow text-primary px-8 py-2 rounded-xl text-xs font-black shadow-xl hover:scale-105 active:scale-95 transition-all">
+                        <button data-save-patient class="bg-accent text-primary px-8 py-2 rounded-xl text-xs font-black shadow-xl hover:scale-105 active:scale-95 transition-all">
                             ${isNew ? translate('إضافة المريض', 'ADD PATIENT') : translate('حفظ التغييرات', 'SAVE CHANGES')}
                         </button>
                     </div>
                 </div>
 
-                <!-- Tabs -->
+                <!-- التبويبات -->
                 <div class="flex bg-white dark:bg-slate-900 border-b dark:border-slate-800 overflow-x-auto no-scrollbar shrink-0 px-4">
                     ${['id', 'situation', 'background', 'assess', 'recs', 'meds', 'labs', 'rad', 'events'].map(tab => `
                         <button data-tab="${tab}" class="flex-shrink-0 px-6 py-4 flex flex-col items-center gap-1 border-b-4 transition-all duration-300 ${state.modalTab === tab ? 'border-primary text-primary' : 'border-transparent text-slate-400'}">
@@ -2383,10 +2796,10 @@ async function savePatient() {
                     `).join('')}
                 </div>
 
-                <!-- Content -->
+                <!-- المحتوى -->
                 <div class="flex-1 overflow-y-auto p-6">
                     <div class="max-w-4xl mx-auto">
-                        ${renderModalTabContent(state.modalTab, isbar, patient, translate)}
+                        ${renderModalTabContent(state.modalTab, patient, tempData, translate)}
                     </div>
                 </div>
             </div>
@@ -2423,58 +2836,83 @@ async function savePatient() {
         return labels[tab] || tab;
     }
 
-    function renderModalTabContent(tab, isbar, patient, translate) {
+    function renderModalTabContent(tab, patient, tempData, translate) {
+        const isbar = patient?.isbar || {};
+        
         switch(tab) {
             case 'id':
                 return `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        ${renderFormInput('patientName', translate('اسم المريض', 'Patient Name'), patient?.name || '', 'text', true)}
-                        ${renderFormInput('fileNumber', 'MRN', patient?.fileNumber || `MRN${Date.now().toString().slice(-6)}`, 'text')}
-                        ${renderFormInput('age', translate('العمر', 'Age'), patient?.age || '', 'text')}
-                        ${renderFormInput('roomNumber', translate('رقم الغرفة', 'Room No'), isbar.identification?.room_no || '', 'text')}
-                        ${renderFormInput('admissionDate', translate('تاريخ القبول', 'Admission Date'), isbar.identification?.admission_date || new Date().toISOString().split('T')[0], 'date')}
-                        ${renderFormInput('admittedFrom', translate('قادم من', 'Admitted From'), isbar.identification?.admitted_from || 'ER', 'text')}
-                        ${renderFormInput('consultant', translate('الطبيب المعالج', 'Consultant'), isbar.identification?.consultant || '', 'text')}
+                        ${renderFormInput('patientName', translate('اسم المريض', 'Patient Name'), 
+                            tempData.patientName || patient?.name || '', 'text', true, 'patient-field')}
+                        ${renderFormInput('fileNumber', 'MRN', 
+                            tempData.fileNumber || patient?.fileNumber || `MRN${Date.now().toString().slice(-6)}`, 'text', false, 'patient-field')}
+                        ${renderFormInput('age', translate('العمر', 'Age'), 
+                            tempData.age || patient?.age || '', 'text', false, 'patient-field')}
+                        ${renderFormInput('roomNumber', translate('رقم الغرفة', 'Room No'), 
+                            tempData.roomNumber || isbar.identification?.room_no || '', 'text', false, 'patient-field')}
+                        ${renderFormInput('admissionDate', translate('تاريخ القبول', 'Admission Date'), 
+                            tempData.admissionDate || isbar.identification?.admission_date || new Date().toISOString().split('T')[0], 'date', false, 'patient-field')}
+                        ${renderFormInput('admittedFrom', translate('قادم من', 'Admitted From'), 
+                            tempData.admittedFrom || isbar.identification?.admitted_from || 'ER', 'text', false, 'patient-field')}
+                        ${renderFormInput('consultant', translate('الطبيب المعالج', 'Consultant'), 
+                            tempData.consultant || isbar.identification?.consultant || '', 'text', false, 'patient-field')}
                     </div>
                 `;
                 
             case 'situation':
                 return `
                     <div class="space-y-6">
-                        ${renderFormTextarea('diagnosis', translate('التشخيص', 'Diagnosis'), isbar.situation?.diagnosis || patient?.diagnosis || '')}
-                        ${renderFormTextarea('currentComplaints', translate('الشكوى الحالية', 'Current Complaints'), isbar.situation?.current_complaints || '')}
-                        ${renderFormInput('diet', translate('الحمية الغذائية', 'Diet'), isbar.situation?.diet || '', 'text')}
+                        ${renderFormTextarea('diagnosis', translate('التشخيص', 'Diagnosis'), 
+                            tempData.diagnosis || patient?.diagnosis || isbar.situation?.diagnosis || '', 'patient-field')}
+                        ${renderFormTextarea('currentComplaints', translate('الشكوى الحالية', 'Current Complaints'), 
+                            tempData.currentComplaints || isbar.situation?.current_complaints || '', 'patient-field')}
+                        ${renderFormInput('diet', translate('الحمية الغذائية', 'Diet'), 
+                            tempData.diet || isbar.situation?.diet || '', 'text', false, 'patient-field')}
                     </div>
                 `;
                 
             case 'background':
                 return `
                     <div class="space-y-6">
-                        ${renderFormTextarea('pastMedicalHistory', translate('التاريخ المرضي', 'Past Medical History'), isbar.background?.past_medical_history || '')}
-                        ${renderFormTextarea('chiefComplaint', translate('سبب القبول', 'Chief Complaint'), isbar.background?.chief_complaint || '')}
-                        ${renderFormInput('allergy', translate('الحساسية', 'Allergies'), isbar.background?.allergy || translate('لا يوجد', 'None'), 'text')}
-                        ${renderFormInput('isolation', translate('العزل', 'Isolation'), isbar.background?.infections_isolation || translate('لا يوجد', 'None'), 'text')}
+                        ${renderFormTextarea('pastMedicalHistory', translate('التاريخ المرضي', 'Past Medical History'), 
+                            tempData.pastMedicalHistory || isbar.background?.past_medical_history || '', 'patient-field')}
+                        ${renderFormTextarea('chiefComplaint', translate('سبب القبول', 'Chief Complaint'), 
+                            tempData.chiefComplaint || isbar.background?.chief_complaint || '', 'patient-field')}
+                        ${renderFormInput('allergy', translate('الحساسية', 'Allergies'), 
+                            tempData.allergy || isbar.background?.allergy || translate('لا يوجد', 'None'), 'text', false, 'patient-field')}
+                        ${renderFormInput('isolation', translate('العزل', 'Isolation'), 
+                            tempData.isolation || isbar.background?.infections_isolation || translate('لا يوجد', 'None'), 'text', false, 'patient-field')}
                     </div>
                 `;
                 
             case 'assess':
                 return `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        ${renderFormInput('gcs', 'GCS', isbar.assessment?.gcs || '15', 'number')}
-                        ${renderFormSelect('fallRisk', translate('خطر السقوط', 'Fall Risk'), ['low', 'medium', 'high'], isbar.assessment?.fall_risk || 'low')}
-                        ${renderFormTextarea('vitals', translate('العلامات الحيوية', 'Vital Signs'), isbar.assessment?.vitals || '')}
-                        ${renderFormInput('ventilation', translate('الدعم التنفسي', 'Ventilation'), isbar.assessment?.ventilation || 'Room Air', 'text')}
-                        ${renderFormSelect('bedSore', translate('قرحة الفراش', 'Bed Sore'), ['no', 'yes'], isbar.assessment?.bed_sore || 'no')}
-                        ${renderFormSelect('restraint', translate('التقييد البدني', 'Physical Restraint'), ['no', 'yes'], isbar.assessment?.physical_restraint || 'no')}
-                        ${renderFormTextarea('findings', translate('الملاحظات الهامة', 'Important Findings'), isbar.assessment?.important_findings || '')}
+                        ${renderFormInput('gcs', 'GCS', 
+                            tempData.gcs || isbar.assessment?.gcs || '15', 'number', false, 'patient-field')}
+                        ${renderFormSelect('fallRisk', translate('خطر السقوط', 'Fall Risk'), ['low', 'medium', 'high'], 
+                            tempData.fallRisk || isbar.assessment?.fall_risk || 'low', 'patient-field')}
+                        ${renderFormTextarea('vitals', translate('العلامات الحيوية', 'Vital Signs'), 
+                            tempData.vitals || isbar.assessment?.vitals || '', 'patient-field')}
+                        ${renderFormInput('ventilation', translate('الدعم التنفسي', 'Ventilation'), 
+                            tempData.ventilation || isbar.assessment?.ventilation || 'Room Air', 'text', false, 'patient-field')}
+                        ${renderFormSelect('bedSore', translate('قرحة الفراش', 'Bed Sore'), ['no', 'yes'], 
+                            tempData.bedSore || isbar.assessment?.bed_sore || 'no', 'patient-field')}
+                        ${renderFormSelect('restraint', translate('التقييد البدني', 'Physical Restraint'), ['no', 'yes'], 
+                            tempData.restraint || isbar.assessment?.physical_restraint || 'no', 'patient-field')}
+                        ${renderFormTextarea('findings', translate('الملاحظات الهامة', 'Important Findings'), 
+                            tempData.findings || isbar.assessment?.important_findings || '', 'patient-field')}
                     </div>
                 `;
                 
             case 'recs':
                 return `
                     <div class="space-y-6">
-                        ${renderFormTextarea('planOfCare', translate('خطة الرعاية', 'Plan of Care'), isbar.recommendations?.plan_of_care || '')}
-                        ${renderFormTextarea('risks', translate('المخاطر', 'Risks'), isbar.recommendations?.risks || '')}
+                        ${renderFormTextarea('planOfCare', translate('خطة الرعاية', 'Plan of Care'), 
+                            tempData.planOfCare || isbar.recommendations?.plan_of_care || '', 'patient-field')}
+                        ${renderFormTextarea('risks', translate('المخاطر', 'Risks'), 
+                            tempData.risks || isbar.recommendations?.risks || '', 'patient-field')}
                     </div>
                 `;
                 
@@ -2516,7 +2954,7 @@ async function savePatient() {
                     <div class="space-y-4">
                         <div class="flex justify-between items-center">
                             <h3 class="font-bold text-lg">🧪 التحاليل المخبرية</h3>
-                            <button onclick="addLabTest('${patient?.id || ''}')" class="px-4 py-2 bg-primary text-white rounded-lg text-sm">
+                            <button data-add-lab class="px-4 py-2 bg-primary text-white rounded-lg text-sm">
                                 + إضافة تحليل
                             </button>
                         </div>
@@ -2536,7 +2974,7 @@ async function savePatient() {
                                     <tbody>
                                         ${patient.labs.map((lab, index) => `
                                             <tr class="border-b dark:border-gray-800">
-                                                <td class="p-3">${lab.name}</td>
+                                                <td class="p-3">${lab.type}</td>
                                                 <td class="p-3">${lab.value}</td>
                                                 <td class="p-3">${lab.unit}</td>
                                                 <td class="p-3">${new Date(lab.date).toLocaleDateString('ar-EG')}</td>
@@ -2561,7 +2999,7 @@ async function savePatient() {
                     <div class="space-y-4">
                         <div class="flex justify-between items-center">
                             <h3 class="font-bold text-lg">📷 الأشعة والتصوير</h3>
-                            <button onclick="addRadiology('${patient?.id || ''}')" class="px-4 py-2 bg-primary text-white rounded-lg text-sm">
+                            <button data-add-radiology class="px-4 py-2 bg-primary text-white rounded-lg text-sm">
                                 + إضافة أشعة
                             </button>
                         </div>
@@ -2599,7 +3037,7 @@ async function savePatient() {
         }
     }
 
-    function renderFormInput(id, label, value, type = 'text', required = false) {
+    function renderFormInput(id, label, value, type = 'text', required = false, className = '') {
         return `
             <div class="flex flex-col gap-2">
                 <label for="${id}" class="text-[10px] font-black text-slate-400 tracking-widest uppercase ml-2">
@@ -2610,13 +3048,13 @@ async function savePatient() {
                     id="${id}"
                     value="${value}"
                     ${required ? 'required' : ''}
-                    class="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-bold focus:ring-2 ring-primary/20 outline-none transition-all dark:text-white shadow-sm"
+                    class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700 focus:ring-2 ring-primary/20 outline-none transition-all ${className}"
                 />
             </div>
         `;
     }
 
-    function renderFormTextarea(id, label, value) {
+    function renderFormTextarea(id, label, value, className = '') {
         return `
             <div class="flex flex-col gap-2">
                 <label for="${id}" class="text-[10px] font-black text-slate-400 tracking-widest uppercase ml-2">
@@ -2624,13 +3062,13 @@ async function savePatient() {
                 </label>
                 <textarea 
                     id="${id}"
-                    class="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-bold h-32 focus:ring-2 ring-primary/20 outline-none transition-all dark:text-white shadow-sm"
+                    class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700 h-32 focus:ring-2 ring-primary/20 outline-none transition-all ${className}"
                 >${value}</textarea>
             </div>
         `;
     }
 
-    function renderFormSelect(id, label, options, value) {
+    function renderFormSelect(id, label, options, value, className = '') {
         return `
             <div class="flex flex-col gap-2">
                 <label for="${id}" class="text-[10px] font-black text-slate-400 tracking-widest uppercase ml-2">
@@ -2638,7 +3076,7 @@ async function savePatient() {
                 </label>
                 <select 
                     id="${id}"
-                    class="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-bold focus:ring-2 ring-primary/20 outline-none transition-all dark:text-white shadow-sm"
+                    class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700 focus:ring-2 ring-primary/20 outline-none transition-all ${className}"
                 >
                     ${options.map(option => `
                         <option value="${option}" ${option === value ? 'selected' : ''}>
@@ -2666,489 +3104,167 @@ async function savePatient() {
             </div>
         `;
     }
-// app.js - الجزء المكمل
-// في نهاية ملف app.js بعد الدوال الموجودة، أضف:
 
-// دوال إدارة الأدوية
-function addMedication(patientId) {
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
-    modal.innerHTML = `
-        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
-            <div class="bg-primary p-6 text-white flex justify-between items-center rounded-t-3xl">
-                <h3 class="text-xl font-black">إضافة دواء جديد</h3>
-                <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">اسم الدواء</label>
-                    <input type="text" id="med-name" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+    // دوال إضافية للمودالات
+    function addClinicalEvent(patientId) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white flex justify-between items-center rounded-t-3xl">
+                    <h3 class="text-xl font-black">إضافة حدث سريري</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="p-6 space-y-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">الجرعة</label>
-                        <input type="text" id="med-dosage" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="500mg">
+                        <label class="block text-sm font-medium mb-2">الحدث</label>
+                        <textarea id="event-text" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="3" placeholder="وصف الحدث السريري..."></textarea>
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-2">التكرار</label>
-                        <input type="text" id="med-frequency" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="كل 8 ساعات">
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">طريقة الاستعمال</label>
-                    <select id="med-route" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
-                        <option value="oral">فموي</option>
-                        <option value="iv">وريدي</option>
-                        <option value="im">عضلي</option>
-                        <option value="sc">تحت الجلد</option>
-                        <option value="topical">موضعي</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">ملاحظات</label>
-                    <textarea id="med-notes" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="2"></textarea>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">تاريخ البدء</label>
-                    <input type="date" id="med-start-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
-                </div>
-            </div>
-            
-            <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
-                <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                    إلغاء
-                </button>
-                <button onclick="saveMedication('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
-                    حفظ الدواء
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-async function saveMedication(patientId) {
-    const medication = {
-        name: document.getElementById('med-name').value,
-        dosage: document.getElementById('med-dosage').value,
-        frequency: document.getElementById('med-frequency').value,
-        route: document.getElementById('med-route').value,
-        notes: document.getElementById('med-notes').value,
-        startDate: document.getElementById('med-start-date').value,
-        createdAt: new Date().toISOString()
-    };
-    
-    if (!medication.name || !medication.dosage) {
-        showNotification('الرجاء إدخال اسم الدواء والجرعة', 'warning');
-        return;
-    }
-    
-    try {
-        const patient = state.patients.find(p => p.id === patientId);
-        const updatedMedications = [...(patient.medications || []), medication];
-        
-        await PocketBaseService.PatientService.updatePatient(patientId, {
-            medications: updatedMedications
-        });
-        
-        showNotification('تم إضافة الدواء بنجاح', 'success');
-        await loadInitialData();
-        render();
-        
-        // إغلاق المودال
-        const modal = document.querySelector('.fixed.inset-0.z-50');
-        if (modal) modal.remove();
-        
-    } catch (error) {
-        console.error('Error saving medication:', error);
-        showNotification('خطأ في حفظ الدواء', 'error');
-    }
-}
-
-// دوال إدارة التحاليل
-function addLabTest(patientId) {
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
-    modal.innerHTML = `
-        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
-            <div class="bg-primary p-6 text-white flex justify-between items-center rounded-t-3xl">
-                <h3 class="text-xl font-black">إضافة تحليل جديد</h3>
-                <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">نوع التحليل</label>
-                    <input type="text" id="lab-type" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="CBC, Creatinine, etc.">
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">القيمة</label>
-                        <input type="text" id="lab-value" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                        <label class="block text-sm font-medium mb-2">التصنيف</label>
+                        <select id="event-category" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
+                            <option value="assessment">تقييم</option>
+                            <option value="intervention">تدخل</option>
+                            <option value="medication">دواء</option>
+                            <option value="procedure">إجراء</option>
+                            <option value="note">ملاحظة</option>
+                        </select>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium mb-2">الوحدة</label>
-                        <input type="text" id="lab-unit" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="mg/dL, mmol/L">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">التاريخ</label>
+                            <input type="date" id="event-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الوقت</label>
+                            <input type="time" id="event-time" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" value="${new Date().toTimeString().slice(0,5)}">
+                        </div>
                     </div>
                 </div>
                 
-                <div>
-                    <label class="block text-sm font-medium mb-2">النطاق المرجعي</label>
-                    <input type="text" id="lab-range" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="3.5-5.5">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">التاريخ</label>
-                    <input type="datetime-local" id="lab-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">ملاحظات</label>
-                    <textarea id="lab-notes" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="2"></textarea>
+                <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                        إلغاء
+                    </button>
+                    <button onclick="saveClinicalEvent('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
+                        حفظ الحدث
+                    </button>
                 </div>
             </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    async function saveClinicalEvent(patientId) {
+        const event = {
+            event: document.getElementById('event-text').value,
+            category: document.getElementById('event-category').value,
+            date: document.getElementById('event-date').value,
+            time: document.getElementById('event-time').value,
+            createdAt: new Date().toISOString()
+        };
+        
+        if (!event.event) {
+            showNotification('الرجاء إدخال وصف الحدث', 'warning');
+            return;
+        }
+        
+        try {
+            const patient = state.patients.find(p => p.id === patientId);
+            const updatedEvents = [{ ...event, id: Date.now().toString() }, ...(patient.isbar?.shift_notes || [])];
             
-            <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
-                <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                    إلغاء
-                </button>
-                <button onclick="saveLabTest('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
-                    حفظ التحليل
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-async function saveLabTest(patientId) {
-    const labTest = {
-        type: document.getElementById('lab-type').value,
-        value: document.getElementById('lab-value').value,
-        unit: document.getElementById('lab-unit').value,
-        range: document.getElementById('lab-range').value,
-        date: document.getElementById('lab-date').value || new Date().toISOString(),
-        notes: document.getElementById('lab-notes').value,
-        createdAt: new Date().toISOString()
-    };
-    
-    if (!labTest.type || !labTest.value) {
-        showNotification('الرجاء إدخال نوع التحليل والقيمة', 'warning');
-        return;
-    }
-    
-    try {
-        const patient = state.patients.find(p => p.id === patientId);
-        const updatedLabs = [...(patient.labs || []), labTest];
-        
-        await PocketBaseService.PatientService.updatePatient(patientId, {
-            labs: updatedLabs
-        });
-        
-        showNotification('تم إضافة التحليل بنجاح', 'success');
-        await loadInitialData();
-        render();
-        
-        const modal = document.querySelector('.fixed.inset-0.z-50');
-        if (modal) modal.remove();
-        
-    } catch (error) {
-        console.error('Error saving lab test:', error);
-        showNotification('خطأ في حفظ التحليل', 'error');
-    }
-}
-
-// دوال إدارة الأشعة
-function addRadiology(patientId) {
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
-    modal.innerHTML = `
-        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
-            <div class="bg-primary p-6 text-white flex justify-between items-center rounded-t-3xl">
-                <h3 class="text-xl font-black">إضافة أشعة جديدة</h3>
-                <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
+            const updatedIsbar = { ...patient.isbar, shift_notes: updatedEvents };
             
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">نوع الأشعة</label>
-                    <select id="rad-type" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
-                        <option value="xray">أشعة سينية</option>
-                        <option value="ct">أشعة مقطعية</option>
-                        <option value="mri">رنين مغناطيسي</option>
-                        <option value="ultrasound">سونار</option>
-                        <option value="echo">إيكو</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">المنطقة</label>
-                    <input type="text" id="rad-area" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" placeholder="الصدر، البطن، الدماغ">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">النتيجة</label>
-                    <textarea id="rad-result" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="3" placeholder="تقرير الأشعة..."></textarea>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">الطبيب المشخص</label>
-                    <input type="text" id="rad-doctor" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">التاريخ</label>
-                    <input type="date" id="rad-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
-                </div>
-            </div>
+            await PocketBaseService.PatientService.updatePatient(patientId, {
+                isbar: updatedIsbar
+            });
             
-            <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
-                <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                    إلغاء
-                </button>
-                <button onclick="saveRadiology('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
-                    حفظ الأشعة
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-async function saveRadiology(patientId) {
-    const radiology = {
-        type: document.getElementById('rad-type').value,
-        area: document.getElementById('rad-area').value,
-        result: document.getElementById('rad-result').value,
-        doctor: document.getElementById('rad-doctor').value,
-        date: document.getElementById('rad-date').value || new Date().toISOString(),
-        createdAt: new Date().toISOString()
-    };
-    
-    if (!radiology.type || !radiology.area) {
-        showNotification('الرجاء إدخال نوع الأشعة والمنطقة', 'warning');
-        return;
-    }
-    
-    try {
-        const patient = state.patients.find(p => p.id === patientId);
-        const updatedRadiology = [...(patient.radiology || []), radiology];
-        
-        await PocketBaseService.PatientService.updatePatient(patientId, {
-            radiology: updatedRadiology
-        });
-        
-        showNotification('تم إضافة الأشعة بنجاح', 'success');
-        await loadInitialData();
-        render();
-        
-        const modal = document.querySelector('.fixed.inset-0.z-50');
-        if (modal) modal.remove();
-        
-    } catch (error) {
-        console.error('Error saving radiology:', error);
-        showNotification('خطأ في حفظ الأشعة', 'error');
-    }
-}
-
-// دالة حذف البيانات
-async function deleteLabTest(patientId, index) {
-    if (!confirm('هل تريد حذف هذا التحليل؟')) return;
-    
-    try {
-        const patient = state.patients.find(p => p.id === patientId);
-        const updatedLabs = patient.labs.filter((_, i) => i !== index);
-        
-        await PocketBaseService.PatientService.updatePatient(patientId, {
-            labs: updatedLabs
-        });
-        
-        showNotification('تم حذف التحليل', 'success');
-        await loadInitialData();
-        render();
-        
-    } catch (error) {
-        console.error('Error deleting lab test:', error);
-        showNotification('خطأ في حذف التحليل', 'error');
-    }
-}
-
-async function deleteRadiology(patientId, index) {
-    if (!confirm('هل تريد حذف هذه الأشعة؟')) return;
-    
-    try {
-        const patient = state.patients.find(p => p.id === patientId);
-        const updatedRadiology = patient.radiology.filter((_, i) => i !== index);
-        
-        await PocketBaseService.PatientService.updatePatient(patientId, {
-            radiology: updatedRadiology
-        });
-        
-        showNotification('تم حذف الأشعة', 'success');
-        await loadInitialData();
-        render();
-        
-    } catch (error) {
-        console.error('Error deleting radiology:', error);
-        showNotification('خطأ في حذف الأشعة', 'error');
-    }
-}
-
-async function deleteEvent(patientId, index) {
-    if (!confirm('هل تريد حذف هذا الحدث؟')) return;
-    
-    try {
-        const patient = state.patients.find(p => p.id === patientId);
-        const updatedEvents = patient.isbar?.shift_notes?.filter((_, i) => i !== index) || [];
-        
-        const updatedIsbar = { ...patient.isbar, shift_notes: updatedEvents };
-        
-        await PocketBaseService.PatientService.updatePatient(patientId, {
-            isbar: updatedIsbar
-        });
-        
-        showNotification('تم حذف الحدث', 'success');
-        await loadInitialData();
-        render();
-        
-    } catch (error) {
-        console.error('Error deleting event:', error);
-        showNotification('خطأ في حذف الحدث', 'error');
-    }
-}
-
-function addClinicalEvent(patientId) {
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4';
-    modal.innerHTML = `
-        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full">
-            <div class="bg-primary p-6 text-white flex justify-between items-center rounded-t-3xl">
-                <h3 class="text-xl font-black">إضافة حدث سريري</h3>
-                <button onclick="this.closest('.fixed').remove()" class="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
+            showNotification('تم إضافة الحدث', 'success');
+            await loadInitialData();
+            render();
             
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">الحدث</label>
-                    <textarea id="event-text" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" rows="3" placeholder="وصف الحدث السريري..."></textarea>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">التصنيف</label>
-                    <select id="event-category" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700">
-                        <option value="assessment">تقييم</option>
-                        <option value="intervention">تدخل</option>
-                        <option value="medication">دواء</option>
-                        <option value="procedure">إجراء</option>
-                        <option value="note">ملاحظة</option>
-                    </select>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">التاريخ</label>
-                        <input type="date" id="event-date" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" value="${new Date().toISOString().split('T')[0]}">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium mb-2">الوقت</label>
-                        <input type="time" id="event-time" class="w-full p-3 border rounded-lg dark:bg-slate-800 dark:border-slate-700" value="${new Date().toTimeString().slice(0,5)}">
-                    </div>
-                </div>
-            </div>
+            const modal = document.querySelector('.fixed.inset-0.z-50');
+            if (modal) modal.remove();
             
-            <div class="p-6 border-t dark:border-slate-800 flex justify-end gap-3">
-                <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                    إلغاء
-                </button>
-                <button onclick="saveClinicalEvent('${patientId}')" class="px-6 py-2 bg-primary text-white rounded-xl">
-                    حفظ الحدث
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-async function saveClinicalEvent(patientId) {
-    const event = {
-        event: document.getElementById('event-text').value,
-        category: document.getElementById('event-category').value,
-        date: document.getElementById('event-date').value,
-        time: document.getElementById('event-time').value,
-        createdAt: new Date().toISOString()
-    };
-    
-    if (!event.event) {
-        showNotification('الرجاء إدخال وصف الحدث', 'warning');
-        return;
+        } catch (error) {
+            console.error('Error saving event:', error);
+            showNotification('خطأ في حفظ الحدث', 'error');
+        }
     }
-    
-    try {
-        const patient = state.patients.find(p => p.id === patientId);
-        const updatedEvents = [{ ...event, id: Date.now().toString() }, ...(patient.isbar?.shift_notes || [])];
+
+    async function deleteEvent(patientId, index) {
+        if (!confirm('هل تريد حذف هذا الحدث؟')) return;
         
-        const updatedIsbar = { ...patient.isbar, shift_notes: updatedEvents };
-        
-        await PocketBaseService.PatientService.updatePatient(patientId, {
-            isbar: updatedIsbar
-        });
-        
-        showNotification('تم إضافة الحدث', 'success');
-        await loadInitialData();
-        render();
-        
-        const modal = document.querySelector('.fixed.inset-0.z-50');
-        if (modal) modal.remove();
-        
-    } catch (error) {
-        console.error('Error saving event:', error);
-        showNotification('خطأ في حفظ الحدث', 'error');
+        try {
+            const patient = state.patients.find(p => p.id === patientId);
+            const updatedEvents = patient.isbar?.shift_notes?.filter((_, i) => i !== index) || [];
+            
+            const updatedIsbar = { ...patient.isbar, shift_notes: updatedEvents };
+            
+            await PocketBaseService.PatientService.updatePatient(patientId, {
+                isbar: updatedIsbar
+            });
+            
+            showNotification('تم حذف الحدث', 'success');
+            await loadInitialData();
+            render();
+            
+        } catch (error) {
+            console.error('Error deleting event:', error);
+            showNotification('خطأ في حذف الحدث', 'error');
+        }
     }
-}
 
-// دالة النسخ إلى الحافظة
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showNotification('تم النسخ إلى الحافظة', 'success');
-    }).catch(err => {
-        console.error('Failed to copy:', err);
-        showNotification('فشل النسخ', 'error');
-    });
-}
-
-// Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if user is authenticated
-    if (window.PocketBaseService && window.PocketBaseService.UserService.isAuthenticated()) {
-        window.NuraithmApp.state.isAuthenticated = true;
-        window.NuraithmApp.state.currentUser = window.PocketBaseService.UserService.getCurrentUser();
-        window.NuraithmApp.init();
+    async function deleteLabTest(patientId, index) {
+        if (!confirm('هل تريد حذف هذا التحليل؟')) return;
+        
+        try {
+            const patient = state.patients.find(p => p.id === patientId);
+            const updatedLabs = patient.labs.filter((_, i) => i !== index);
+            
+            await PocketBaseService.PatientService.updatePatient(patientId, {
+                labs: updatedLabs
+            });
+            
+            showNotification('تم حذف التحليل', 'success');
+            await loadInitialData();
+            render();
+            
+        } catch (error) {
+            console.error('Error deleting lab test:', error);
+            showNotification('خطأ في حذف التحليل', 'error');
+        }
     }
-});
 
+    async function deleteRadiology(patientId, index) {
+        if (!confirm('هل تريد حذف هذه الأشعة؟')) return;
+        
+        try {
+            const patient = state.patients.find(p => p.id === patientId);
+            const updatedRadiology = patient.radiology.filter((_, i) => i !== index);
+            
+            await PocketBaseService.PatientService.updatePatient(patientId, {
+                radiology: updatedRadiology
+            });
+            
+            showNotification('تم حذف الأشعة', 'success');
+            await loadInitialData();
+            render();
+            
+        } catch (error) {
+            console.error('Error deleting radiology:', error);
+            showNotification('خطأ في حذف الأشعة', 'error');
+        }
+    }
 
-    // Public API
+    // API العامة
     return {
         init,
         state,
@@ -3157,22 +3273,20 @@ document.addEventListener('DOMContentLoaded', function() {
         generateAIAlerts,
         render,
         toggleTask,
-        deleteTask
+        deleteTask,
+        toggleTodo,
+        deleteTodo,
+        addTodo
     };
 })();
 
-// Make app globally available
+// جعل التطبيق متاحاً عالمياً
 window.NuraithmApp = NuraithmApp;
-// جعل الدوال متاحة عالمياً
-window.addMedication = addMedication;
-window.saveMedication = saveMedication;
-window.addLabTest = addLabTest;
-window.saveLabTest = saveLabTest;
-window.deleteLabTest = deleteLabTest;
-window.addRadiology = addRadiology;
-window.saveRadiology = saveRadiology;
-window.deleteRadiology = deleteRadiology;
+
+// جعل الدوال الإضافية متاحة عالمياً
 window.addClinicalEvent = addClinicalEvent;
 window.saveClinicalEvent = saveClinicalEvent;
 window.deleteEvent = deleteEvent;
+window.deleteLabTest = deleteLabTest;
+window.deleteRadiology = deleteRadiology;
 window.copyToClipboard = copyToClipboard;

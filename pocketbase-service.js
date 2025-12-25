@@ -2,24 +2,19 @@
 const PocketBaseService = (function() {
     const pb = window.PB;
     
-    // User Management
     const UserService = {
-        // Get current user
         getCurrentUser() {
             return pb.authStore.model;
         },
         
-        // Check if user is authenticated
         isAuthenticated() {
             return pb.authStore.isValid;
         },
         
-        // Logout
         logout() {
             pb.authStore.clear();
         },
         
-        // Update profile
         async updateProfile(data) {
             try {
                 const user = pb.authStore.model;
@@ -33,9 +28,7 @@ const PocketBaseService = (function() {
         }
     };
     
-    // Patients Management
     const PatientService = {
-        // Get all patients for current user
         async getPatients() {
             try {
                 const user = UserService.getCurrentUser();
@@ -49,7 +42,6 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Get single patient
         async getPatient(id) {
             try {
                 const user = UserService.getCurrentUser();
@@ -62,7 +54,6 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Create patient
         async createPatient(data) {
             try {
                 const user = UserService.getCurrentUser();
@@ -77,16 +68,13 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Update patient
         async updatePatient(id, data) {
             try {
                 const user = UserService.getCurrentUser();
-                // تأكد من أن المستخدم يملك السجل
                 await pb.collection('patients').getOne(id, {
                     filter: `user = "${user.id}"`
                 });
                 
-                // تحديث البيانات
                 return await pb.collection('patients').update(id, data);
             } catch (error) {
                 console.error('Update patient error:', error);
@@ -94,11 +82,9 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Delete patient
         async deletePatient(id) {
             try {
                 const user = UserService.getCurrentUser();
-                // تأكد من أن المستخدم يملك السجل
                 await pb.collection('patients').getOne(id, {
                     filter: `user = "${user.id}"`
                 });
@@ -111,9 +97,7 @@ const PocketBaseService = (function() {
         }
     };
     
-    // Alerts Management
     const AlertService = {
-        // Get all alerts for current user
         async getAlerts() {
             try {
                 const user = UserService.getCurrentUser();
@@ -127,7 +111,6 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Create alert
         async createAlert(data) {
             try {
                 const user = UserService.getCurrentUser();
@@ -142,11 +125,9 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Mark alert as read
         async markAsRead(id) {
             try {
                 const user = UserService.getCurrentUser();
-                // تأكد من أن المستخدم يملك السجل
                 await pb.collection('alerts').getOne(id, {
                     filter: `user = "${user.id}"`
                 });
@@ -158,11 +139,9 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Delete alert
         async deleteAlert(id) {
             try {
                 const user = UserService.getCurrentUser();
-                // تأكد من أن المستخدم يملك السجل
                 await pb.collection('alerts').getOne(id, {
                     filter: `user = "${user.id}"`
                 });
@@ -174,7 +153,6 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Clear all read alerts
         async clearReadAlerts() {
             try {
                 const user = UserService.getCurrentUser();
@@ -194,9 +172,7 @@ const PocketBaseService = (function() {
         }
     };
     
-    // Todos Management
     const TodoService = {
-        // Get all todos for current user
         async getTodos() {
             try {
                 const user = UserService.getCurrentUser();
@@ -210,7 +186,6 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Create todo
         async createTodo(data) {
             try {
                 const user = UserService.getCurrentUser();
@@ -225,11 +200,9 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Update todo
         async updateTodo(id, data) {
             try {
                 const user = UserService.getCurrentUser();
-                // تأكد من أن المستخدم يملك السجل
                 await pb.collection('todos').getOne(id, {
                     filter: `user = "${user.id}"`
                 });
@@ -241,11 +214,9 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Delete todo
         async deleteTodo(id) {
             try {
                 const user = UserService.getCurrentUser();
-                // تأكد من أن المستخدم يملك السجل
                 await pb.collection('todos').getOne(id, {
                     filter: `user = "${user.id}"`
                 });
@@ -257,11 +228,9 @@ const PocketBaseService = (function() {
             }
         },
         
-        // Toggle todo completion
         async toggleTodo(id) {
             try {
                 const user = UserService.getCurrentUser();
-                // تأكد من أن المستخدم يملك السجل
                 const todo = await pb.collection('todos').getOne(id, {
                     filter: `user = "${user.id}"`
                 });
@@ -276,12 +245,10 @@ const PocketBaseService = (function() {
         }
     };
     
-    // Realtime subscriptions
     const RealtimeService = {
         subscribeToPatients(callback) {
             const user = UserService.getCurrentUser();
             return pb.collection('patients').subscribe('*', (e) => {
-                // تصفية الأحداث حسب المستخدم
                 if (e.record.user === user.id) {
                     callback(e);
                 }
@@ -291,7 +258,6 @@ const PocketBaseService = (function() {
         subscribeToAlerts(callback) {
             const user = UserService.getCurrentUser();
             return pb.collection('alerts').subscribe('*', (e) => {
-                // تصفية الأحداث حسب المستخدم
                 if (e.record.user === user.id) {
                     callback(e);
                 }
@@ -301,7 +267,6 @@ const PocketBaseService = (function() {
         subscribeToTodos(callback) {
             const user = UserService.getCurrentUser();
             return pb.collection('todos').subscribe('*', (e) => {
-                // تصفية الأحداث حسب المستخدم
                 if (e.record.user === user.id) {
                     callback(e);
                 }
@@ -309,16 +274,13 @@ const PocketBaseService = (function() {
         }
     };
     
-    // Initialize service
     async function initialize() {
         try {
-            // Check if user is authenticated
             if (!UserService.isAuthenticated()) {
                 console.log('User not authenticated');
                 return { patients: [], alerts: [], todos: [] };
             }
             
-            // Load data in parallel
             const [patients, alerts, todos] = await Promise.all([
                 PatientService.getPatients(),
                 AlertService.getAlerts(),
@@ -343,7 +305,6 @@ const PocketBaseService = (function() {
         }
     }
     
-    // Public API
     return {
         UserService,
         PatientService,
@@ -354,5 +315,4 @@ const PocketBaseService = (function() {
     };
 })();
 
-// Make service globally available
 window.PocketBaseService = PocketBaseService;

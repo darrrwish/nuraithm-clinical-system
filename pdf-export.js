@@ -1,10 +1,10 @@
-// PDF Export Functions
+// PDF Export Functions - تصميم برتقالي حديث
 const PDFExport = (function() {
-    // Export Handover PDF with ISBAR format
-    function exportHandoverPDF(patient, signature = "Nurse. Ahmed Khaled") {
+    // تصدير PDF لتسليم الحالة مع تصميم برتقالي
+    function exportHandoverPDF(patient, signature = "Nurse. Ahmed Khaled", receivingNurse = "___________________") {
         if (typeof jspdf === 'undefined') {
             console.error('jsPDF not loaded');
-            alert('PDF library not loaded. Please check your internet connection.');
+            alert('مكتبة PDF غير محملة. يرجى التحقق من اتصال الإنترنت.');
             return;
         }
 
@@ -12,696 +12,883 @@ const PDFExport = (function() {
         const doc = new jsPDF('p', 'mm', 'a4');
         const isbar = patient.isbar || {};
 
-        const primaryColor = [67, 78, 120]; // #434E78
-        const secondaryColor = [96, 123, 143]; // #607B8F
-        const accentOrange = [233, 127, 74]; // #E97F4A
+        // الألوان البرتقالية
+        const primaryColor = [255, 107, 53];    // #FF6B35
+        const secondaryColor = [255, 142, 83];  // #FF8E53
+        const accentColor = [255, 181, 99];     // #FFB563
+        const darkColor = [26, 26, 46];         // #1A1A2E
+        const lightColor = [248, 249, 250];     // #F8F9FA
 
-        // Header with gradient effect
+        // الرأس مع تدرج لوني
         doc.setFillColor(...primaryColor);
-        doc.rect(0, 0, 210, 30, 'F');
+        doc.rect(0, 0, 210, 40, 'F');
         
-        // Logo/text in header
+        // شعار/نص في الرأس
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(24);
+        doc.setFontSize(28);
         doc.setFont('helvetica', 'bold');
-        doc.text("N", 15, 18);
+        doc.text("N", 20, 25);
         
-        doc.setFontSize(16);
-        doc.text("Nuraithm", 22, 18);
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Nuraithm", 30, 25);
         
-        doc.setFontSize(10);
-        doc.text("Clinical Handover Report", 105, 12, { align: "center" });
-        doc.text(`Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, 105, 18, { align: "center" });
+        doc.setFontSize(12);
+        doc.text("نظام التسليم السريري الذكي", 105, 18, { align: "center" });
+        doc.text(`تاريخ التصدير: ${new Date().toLocaleDateString('ar-EG')} ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`, 105, 25, { align: "center" });
         
-        doc.setFontSize(8);
-        doc.text("ADVANCED CLINICAL INTELLIGENCE SYSTEM", 105, 24, { align: "center" });
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text("نظام ذكي مدعوم بالذكاء الاصطناعي للرعاية الصحية", 105, 32, { align: "center" });
 
-        // Patient Information Box
-        doc.setFillColor(248, 250, 252); // Light gray
-        doc.rect(10, 35, 190, 20, 'F');
+        // معلومات المريض
+        doc.setFillColor(lightColor);
+        doc.rect(10, 45, 190, 15, 'F');
         doc.setDrawColor(...primaryColor);
         doc.setLineWidth(0.5);
-        doc.rect(10, 35, 190, 20);
+        doc.rect(10, 45, 190, 15);
         
         doc.setTextColor(...primaryColor);
-        doc.setFontSize(14);
+        doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
-        doc.text("PATIENT HANDOVER REPORT", 105, 43, { align: "center" });
+        doc.text("تقرير تسليم الحالة السريرية", 105, 53, { align: "center" });
         
-        doc.setFontSize(10);
-        doc.text(`Patient: ${patient.name} | MRN: ${patient.fileNumber} | Room: ${patient.roomNumber}`, 105, 50, { align: "center" });
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`المريض: ${patient.name} | الرقم: ${patient.fileNumber} | الغرفة: ${patient.roomNumber}`, 105, 60, { align: "center" });
 
-        let startY = 60;
+        let startY = 70;
 
-        // ISBAR Sections
+        // أقسام ISBAR
         
-        // 1. IDENTIFICATION (I)
+        // 1. الهوية (I)
         doc.setFillColor(...primaryColor);
         doc.rect(10, startY, 190, 8, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.text("I - IDENTIFICATION", 15, startY + 5.5);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text("I - الهوية", 15, startY + 5.5);
         
         startY += 10;
         
         const idData = [
-            ['Patient Name', isbar.identification?.patient_name || patient.name || 'N/A'],
-            ['MRN', isbar.identification?.mrn || patient.fileNumber || 'N/A'],
-            ['Age', isbar.identification?.age || patient.age || 'N/A'],
-            ['Room No', isbar.identification?.room_no || patient.roomNumber || 'N/A'],
-            ['Admission Date', isbar.identification?.admission_date || 'N/A'],
-            ['Admitted From', isbar.identification?.admitted_from || 'N/A'],
-            ['Consultant', isbar.identification?.consultant || 'N/A']
+            ['اسم المريض', isbar.identification?.patient_name || patient.name || 'غير محدد'],
+            ['الرقم الطبي', isbar.identification?.mrn || patient.fileNumber || 'غير محدد'],
+            ['العمر', isbar.identification?.age || patient.age || 'غير محدد'],
+            ['رقم الغرفة', isbar.identification?.room_no || patient.roomNumber || 'غير محدد'],
+            ['تاريخ القبول', isbar.identification?.admission_date || 'غير محدد'],
+            ['قادم من', isbar.identification?.admitted_from || 'غير محدد'],
+            ['الطبيب المعالج', isbar.identification?.consultant || 'غير محدد']
         ];
         
         doc.autoTable({
             startY: startY,
-            head: [['Field', 'Value']],
+            head: [['المجال', 'القيمة']],
             body: idData,
             theme: 'grid',
-            headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9 },
-            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { 
+                fillColor: primaryColor, 
+                textColor: [255, 255, 255], 
+                fontSize: 10,
+                fontStyle: 'bold',
+                halign: 'right'
+            },
+            styles: { 
+                fontSize: 10, 
+                cellPadding: 4,
+                textColor: [0, 0, 0],
+                halign: 'right'
+            },
             margin: { left: 15, right: 15 },
             columnStyles: {
-                0: { cellWidth: 60, fontStyle: 'bold' },
-                1: { cellWidth: 115 }
+                0: { 
+                    cellWidth: 60, 
+                    fontStyle: 'bold',
+                    textColor: primaryColor,
+                    halign: 'right'
+                },
+                1: { 
+                    cellWidth: 115,
+                    textColor: darkColor,
+                    halign: 'right'
+                }
             }
         });
         
         startY = doc.lastAutoTable.finalY + 10;
 
-        // 2. SITUATION (S)
-        doc.setFillColor(...primaryColor);
+        // 2. الحالة (S)
+        doc.setFillColor(...secondaryColor);
         doc.rect(10, startY, 190, 8, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.text("S - SITUATION", 15, startY + 5.5);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text("S - الحالة", 15, startY + 5.5);
         
         startY += 10;
         
         const situationData = [
-            ['Primary Diagnosis', patient.diagnosis || 'N/A'],
-            ['Current Complaints', isbar.current_complaints?.complaints || 'N/A'],
-            ['Diet', isbar.current_complaints?.diet || 'N/A']
+            ['التشخيص الرئيسي', patient.diagnosis || 'غير محدد'],
+            ['الشكوى الحالية', isbar.current_complaints?.complaints || 'غير محدد'],
+            ['الحمية الغذائية', isbar.current_complaints?.diet || 'غير محدد']
         ];
         
-        // Add connections
+        // إضافة الاتصالات
         if (isbar.current_complaints?.connections && isbar.current_complaints.connections.length > 0) {
-            situationData.push(['Connections', isbar.current_complaints.connections.map(c => `${c.name} (${c.date})`).join(', ')]);
+            situationData.push(['الاتصالات', isbar.current_complaints.connections.map(c => `${c.name} (${c.date})`).join(', ')]);
         }
         
-        // Add infusions
+        // إضافة المحاليل
         if (isbar.current_complaints?.infusions && isbar.current_complaints.infusions.length > 0) {
-            situationData.push(['Infusions', isbar.current_complaints.infusions.map(i => `${i.name} @ ${i.rate}`).join(', ')]);
+            situationData.push(['المحاليل', isbar.current_complaints.infusions.map(i => `${i.name} @ ${i.rate}`).join(', ')]);
         }
         
         doc.autoTable({
             startY: startY,
-            head: [['Field', 'Value']],
+            head: [['المجال', 'القيمة']],
             body: situationData,
             theme: 'grid',
-            headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9 },
-            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { 
+                fillColor: secondaryColor, 
+                textColor: [255, 255, 255], 
+                fontSize: 10,
+                fontStyle: 'bold',
+                halign: 'right'
+            },
+            styles: { 
+                fontSize: 10, 
+                cellPadding: 4,
+                textColor: [0, 0, 0],
+                halign: 'right'
+            },
             margin: { left: 15, right: 15 },
             columnStyles: {
-                0: { cellWidth: 60, fontStyle: 'bold' },
-                1: { cellWidth: 115 }
+                0: { 
+                    cellWidth: 60, 
+                    fontStyle: 'bold',
+                    textColor: secondaryColor,
+                    halign: 'right'
+                },
+                1: { 
+                    cellWidth: 115,
+                    textColor: darkColor,
+                    halign: 'right'
+                }
             }
         });
         
         startY = doc.lastAutoTable.finalY + 10;
 
-        // 3. BACKGROUND (B)
-        doc.setFillColor(...primaryColor);
+        // 3. الخلفية (B)
+        doc.setFillColor(...accentColor);
         doc.rect(10, startY, 190, 8, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.text("B - BACKGROUND", 15, startY + 5.5);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text("B - الخلفية", 15, startY + 5.5);
         
         startY += 10;
         
         const backgroundData = [
-            ['Past Medical History', isbar.background?.past_medical_history || 'N/A'],
-            ['Chief Complaint', isbar.background?.chief_complaint || 'N/A'],
-            ['Allergies', isbar.background?.allergy || 'None'],
-            ['Isolation Needs', isbar.background?.infections_isolation || 'None']
+            ['التاريخ المرضي', isbar.background?.past_medical_history || 'غير محدد'],
+            ['سبب القبول', isbar.background?.chief_complaint || 'غير محدد'],
+            ['الحساسيات', isbar.background?.allergy || 'لا يوجد'],
+            ['متطلبات العزل', isbar.background?.infections_isolation || 'لا يوجد']
         ];
         
         doc.autoTable({
             startY: startY,
-            head: [['Field', 'Value']],
+            head: [['المجال', 'القيمة']],
             body: backgroundData,
             theme: 'grid',
-            headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9 },
-            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { 
+                fillColor: accentColor, 
+                textColor: [255, 255, 255], 
+                fontSize: 10,
+                fontStyle: 'bold',
+                halign: 'right'
+            },
+            styles: { 
+                fontSize: 10, 
+                cellPadding: 4,
+                textColor: [0, 0, 0],
+                halign: 'right'
+            },
             margin: { left: 15, right: 15 },
             columnStyles: {
-                0: { cellWidth: 60, fontStyle: 'bold' },
-                1: { cellWidth: 115 }
+                0: { 
+                    cellWidth: 60, 
+                    fontStyle: 'bold',
+                    textColor: accentColor,
+                    halign: 'right'
+                },
+                1: { 
+                    cellWidth: 115,
+                    textColor: darkColor,
+                    halign: 'right'
+                }
             }
         });
         
         startY = doc.lastAutoTable.finalY + 10;
 
-        // 4. ASSESSMENT (A)
-        doc.setFillColor(...accentOrange);
+        // 4. التقييم (A)
+        doc.setFillColor(255, 142, 83);
         doc.rect(10, startY, 190, 8, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.text("A - ASSESSMENT", 15, startY + 5.5);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text("A - التقييم", 15, startY + 5.5);
         
         startY += 10;
         
         const assessmentData = [
-            ['GCS', isbar.assessment?.gcs || '15'],
-            ['Fall Risk', isbar.assessment?.fall_risk || 'N/A'],
-            ['Vital Signs', isbar.assessment?.vitals || 'N/A'],
-            ['Ventilation', isbar.assessment?.ventilation || 'Room Air'],
-            ['Bed Sore', isbar.assessment?.bed_sore || 'No'],
-            ['Physical Restraint', isbar.assessment?.physical_restraint || 'No'],
-            ['Important Findings', isbar.assessment?.important_findings || 'N/A']
+            ['مقياس غلاسكو', isbar.assessment?.gcs || '15'],
+            ['خطر السقوط', isbar.assessment?.fall_risk || 'منخفض'],
+            ['العلامات الحيوية', isbar.assessment?.vitals || 'غير محدد'],
+            ['الدعم التنفسي', isbar.assessment?.ventilation || 'هواء الغرفة'],
+            ['قرحة الفراش', isbar.assessment?.bed_sore || 'لا'],
+            ['التقييد البدني', isbar.assessment?.physical_restraint || 'لا'],
+            ['الملاحظات الهامة', isbar.assessment?.important_findings || 'غير محدد']
         ];
         
         doc.autoTable({
             startY: startY,
-            head: [['Field', 'Value']],
+            head: [['المجال', 'القيمة']],
             body: assessmentData,
             theme: 'grid',
-            headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9 },
-            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { 
+                fillColor: [255, 142, 83], 
+                textColor: [255, 255, 255], 
+                fontSize: 10,
+                fontStyle: 'bold',
+                halign: 'right'
+            },
+            styles: { 
+                fontSize: 10, 
+                cellPadding: 4,
+                textColor: [0, 0, 0],
+                halign: 'right'
+            },
             margin: { left: 15, right: 15 },
             columnStyles: {
-                0: { cellWidth: 60, fontStyle: 'bold' },
-                1: { cellWidth: 115 }
+                0: { 
+                    cellWidth: 60, 
+                    fontStyle: 'bold',
+                    textColor: [255, 142, 83],
+                    halign: 'right'
+                },
+                1: { 
+                    cellWidth: 115,
+                    textColor: darkColor,
+                    halign: 'right'
+                }
             }
         });
         
         startY = doc.lastAutoTable.finalY + 10;
 
-        // 5. RECOMMENDATION (R)
-        doc.setFillColor(...secondaryColor);
+        // 5. التوصيات (R)
+        doc.setFillColor(255, 181, 99);
         doc.rect(10, startY, 190, 8, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.text("R - RECOMMENDATION", 15, startY + 5.5);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text("R - التوصيات", 15, startY + 5.5);
         
         startY += 10;
         
         const recommendationData = [
-            ['Plan of Care', isbar.recommendations?.plan_of_care || 'N/A'],
-            ['Risks', isbar.recommendations?.risks || 'N/A']
+            ['خطة الرعاية', isbar.recommendations?.plan_of_care || 'غير محدد'],
+            ['المخاطر', isbar.recommendations?.risks || 'غير محدد']
         ];
         
-        // Add physician orders
+        // إضافة أوامر الطبيب
         if (isbar.recommendations?.physician_orders && isbar.recommendations.physician_orders.length > 0) {
             isbar.recommendations.physician_orders.forEach((order, index) => {
-                recommendationData.push([`Order ${index + 1}`, `${order.order} (${order.status})`]);
-            });
-        }
-        
-        // Add cultures
-        if (isbar.recommendations?.cultures && isbar.recommendations.cultures.length > 0) {
-            isbar.recommendations.cultures.forEach((culture, index) => {
-                recommendationData.push([`Culture ${index + 1}`, `${culture.name}: ${culture.result}`]);
+                recommendationData.push([`أمر ${index + 1}`, `${order.order} (${order.status})`]);
             });
         }
         
         doc.autoTable({
             startY: startY,
-            head: [['Field', 'Value']],
+            head: [['المجال', 'القيمة']],
             body: recommendationData,
             theme: 'grid',
-            headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontSize: 9 },
-            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { 
+                fillColor: [255, 181, 99], 
+                textColor: [255, 255, 255], 
+                fontSize: 10,
+                fontStyle: 'bold',
+                halign: 'right'
+            },
+            styles: { 
+                fontSize: 10, 
+                cellPadding: 4,
+                textColor: [0, 0, 0],
+                halign: 'right'
+            },
             margin: { left: 15, right: 15 },
             columnStyles: {
-                0: { cellWidth: 60, fontStyle: 'bold' },
-                1: { cellWidth: 115 }
+                0: { 
+                    cellWidth: 60, 
+                    fontStyle: 'bold',
+                    textColor: [255, 181, 99],
+                    halign: 'right'
+                },
+                1: { 
+                    cellWidth: 115,
+                    textColor: darkColor,
+                    halign: 'right'
+                }
             }
         });
         
         startY = doc.lastAutoTable.finalY + 15;
 
-        // Medications Section
+        // قسم الأدوية
         if (patient.medications && patient.medications.length > 0) {
             doc.setFillColor(...primaryColor);
             doc.rect(10, startY, 190, 8, 'F');
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(11);
-            doc.text("CURRENT MEDICATIONS", 15, startY + 5.5);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text("الأدوية الحالية", 15, startY + 5.5);
             
             startY += 10;
             
             const medData = patient.medications.map(med => [
-                med.name || 'N/A',
-                med.dosage || 'N/A',
-                med.frequency || 'N/A'
+                med.name || 'غير محدد',
+                med.dosage || 'غير محدد',
+                med.frequency || 'غير محدد',
+                med.route || 'فموي'
             ]);
             
             doc.autoTable({
                 startY: startY,
-                head: [['Medication', 'Dosage', 'Frequency']],
+                head: [['الدواء', 'الجرعة', 'التكرار', 'طريقة الاستعمال']],
                 body: medData,
                 theme: 'grid',
-                headStyles: { fillColor: [67, 78, 120], textColor: [255, 255, 255], fontSize: 9 },
-                styles: { fontSize: 8, cellPadding: 3 },
+                headStyles: { 
+                    fillColor: primaryColor, 
+                    textColor: [255, 255, 255], 
+                    fontSize: 10,
+                    fontStyle: 'bold',
+                    halign: 'right'
+                },
+                styles: { 
+                    fontSize: 9, 
+                    cellPadding: 4,
+                    textColor: [0, 0, 0],
+                    halign: 'right'
+                },
                 margin: { left: 15, right: 15 }
             });
             
             startY = doc.lastAutoTable.finalY + 10;
         }
 
-        // Pending Tasks
+        // المهام المعلقة
         if (patient.todos && patient.todos.filter(t => !t.completed).length > 0) {
             const pendingTodos = patient.todos.filter(t => !t.completed);
             
-            doc.setFillColor(...accentOrange);
+            doc.setFillColor(...accentColor);
             doc.rect(10, startY, 190, 8, 'F');
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(11);
-            doc.text("PENDING TASKS", 15, startY + 5.5);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text("المهام المعلقة", 15, startY + 5.5);
             
             startY += 10;
             
             const todoData = pendingTodos.map(todo => [
-                todo.text || 'N/A',
-                todo.createdAt ? new Date(todo.createdAt).toLocaleDateString() : 'N/A'
+                todo.text || 'غير محدد',
+                todo.createdAt ? new Date(todo.createdAt).toLocaleDateString('ar-EG') : 'غير محدد'
             ]);
             
             doc.autoTable({
                 startY: startY,
-                head: [['Task', 'Created']],
+                head: [['المهمة', 'تاريخ الإنشاء']],
                 body: todoData,
                 theme: 'grid',
-                headStyles: { fillColor: [233, 127, 74], textColor: [255, 255, 255], fontSize: 9 },
-                styles: { fontSize: 8, cellPadding: 3 },
+                headStyles: { 
+                    fillColor: accentColor, 
+                    textColor: [255, 255, 255], 
+                    fontSize: 10,
+                    fontStyle: 'bold',
+                    halign: 'right'
+                },
+                styles: { 
+                    fontSize: 9, 
+                    cellPadding: 4,
+                    textColor: [0, 0, 0],
+                    halign: 'right'
+                },
                 margin: { left: 15, right: 15 }
             });
             
             startY = doc.lastAutoTable.finalY + 10;
         }
 
-        // Signature Section
+        // قسم التوقيعات
         const signatureY = Math.min(startY + 20, 270);
         
         doc.setDrawColor(200, 200, 200);
         doc.line(15, signatureY - 5, 195, signatureY - 5);
         
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Handover Date/Time: ${new Date().toLocaleDateString()} @ ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, 15, signatureY);
-        doc.text(`Outgoing Nurse: ${signature}`, 15, signatureY + 10);
-        doc.text("Receiving Nurse: ___________________", 15, signatureY + 20);
+        doc.setFontSize(11);
+        doc.setTextColor(...darkColor);
+        doc.text(`تاريخ ووقت التسليم: ${new Date().toLocaleDateString('ar-EG')} الساعة ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`, 15, signatureY);
+        doc.text(`الممرض/الممرضة المسلمة: ${signature}`, 15, signatureY + 10);
+        doc.text(`الممرض/الممرضة المستقبلة: ${receivingNurse}`, 15, signatureY + 20);
         
-        // Footer
-        doc.setFontSize(7);
+        // التذييل
+        doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text("Nuraithm Smart Medical Systems - AI Certified Clinical Record", 105, 285, { align: "center" });
-        doc.text("Confidential Medical Document - For authorized personnel only", 105, 288, { align: "center" });
+        doc.text("نظام نورعيظم الطبي الذكي - سجل سريري معتمد بالذكاء الاصطناعي", 105, 285, { align: "center" });
+        doc.text("وثيقة طبية سرية - للموظفين المصرح لهم فقط", 105, 288, { align: "center" });
 
-        // Save PDF
-        const fileName = `Handover_${(isbar.identification?.mrn || patient.fileNumber || 'UNKNOWN').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+        // حفظ PDF
+        const fileName = `تسليم_${(patient.name || 'مريض').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
         doc.save(fileName);
+        
+        return {
+            success: true,
+            fileName: fileName
+        };
     }
 
-    // Export Report PDF
+    // تصدير تقرير PDF عام
     function exportReportPDF(title, content, fileName, signature = "Nurse. Ahmed Khaled", tableData) {
         if (typeof jspdf === 'undefined') {
             console.error('jsPDF not loaded');
-            alert('PDF library not loaded. Please check your internet connection.');
+            alert('مكتبة PDF غير محملة. يرجى التحقق من اتصال الإنترنت.');
             return;
         }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         
-        // Header
-        doc.setFillColor(67, 78, 120);
-        doc.rect(0, 0, 210, 25, 'F');
+        // الرأس بألوان برتقالية
+        doc.setFillColor(255, 107, 53);
+        doc.rect(0, 0, 210, 30, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(18);
+        doc.setFontSize(20);
         doc.setFont('helvetica', 'bold');
-        doc.text(title.toUpperCase(), 105, 14, { align: "center" });
-        doc.setFontSize(8);
-        doc.text(`Clinical Report Generated: ${new Date().toLocaleString()}`, 105, 20, { align: "center" });
+        doc.text(title.toUpperCase(), 105, 16, { align: "center" });
+        doc.setFontSize(9);
+        doc.text(`تم الإنشاء: ${new Date().toLocaleString('ar-EG')}`, 105, 22, { align: "center" });
+        doc.text("نظام نورعيظم الطبي الذكي", 105, 28, { align: "center" });
         
-        // Content
+        // المحتوى
         if (tableData) {
             doc.autoTable({
-                startY: 30,
+                startY: 35,
                 head: [tableData.headers],
                 body: tableData.rows,
                 theme: 'grid',
-                headStyles: { fillColor: [67, 78, 120], fontSize: 9, halign: 'center', textColor: [255, 255, 255] },
-                styles: { fontSize: 8 },
-                margin: { top: 30 },
+                headStyles: { 
+                    fillColor: [255, 107, 53], 
+                    fontSize: 10, 
+                    halign: 'right', 
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                styles: { 
+                    fontSize: 9,
+                    textColor: [0, 0, 0],
+                    halign: 'right'
+                },
+                margin: { top: 35 },
                 pageBreak: 'auto'
             });
         } else {
             doc.setTextColor(0, 0, 0);
-            doc.setFontSize(11);
+            doc.setFontSize(12);
             const splitText = doc.splitTextToSize(content, 180);
             doc.text(splitText, 15, 40);
         }
         
         const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : 100;
         
-        // Signature
-        doc.setFontSize(10);
+        // التوقيع
+        doc.setFontSize(11);
         doc.setTextColor(0, 0, 0);
-        doc.text(`Clinician Signature: ${signature}`, 15, Math.min(finalY, 270));
+        doc.text(`التوقيع: ${signature}`, 15, Math.min(finalY, 270));
         
-        // Footer
-        doc.setFontSize(7);
+        // التذييل
+        doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text("Nuraithm Clinical AI Intelligence - Medical Record.", 105, 285, { align: "center" });
-        doc.text("Document ID: " + Date.now().toString(36).toUpperCase(), 105, 288, { align: "center" });
+        doc.text("نظام نورعيظم للذكاء السريري - سجل طبي إلكتروني", 105, 285, { align: "center" });
+        doc.text(`معرف المستند: ${Date.now().toString(36).toUpperCase()}`, 105, 288, { align: "center" });
 
         doc.save(`${fileName.replace(/\s+/g, '_')}_${Date.now().toString().slice(-6)}.pdf`);
+        
+        return {
+            success: true,
+            fileName: fileName
+        };
     }
 
-    // Export Medication Table PDF
+    // تصدير جدول الأدوية
     function exportMedicationTablePDF(patient, medTable, signature = "Nurse. Ahmed Khaled") {
         if (typeof jspdf === 'undefined') {
             console.error('jsPDF not loaded');
-            alert('PDF library not loaded. Please check your internet connection.');
+            alert('مكتبة PDF غير محملة. يرجى التحقق من اتصال الإنترنت.');
             return;
         }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         
-        // Header
-        doc.setFillColor(67, 78, 120);
-        doc.rect(0, 0, 210, 25, 'F');
+        // الرأس
+        doc.setFillColor(255, 107, 53);
+        doc.rect(0, 0, 210, 30, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(18);
+        doc.setFontSize(20);
         doc.setFont('helvetica', 'bold');
-        doc.text("SMART MEDICATION ANALYSIS", 105, 14, { align: "center" });
-        doc.setFontSize(10);
-        doc.text(`Patient: ${patient.name} | MRN: ${patient.fileNumber}`, 105, 20, { align: "center" });
+        doc.text("تحليل الأدوية الذكي", 105, 16, { align: "center" });
+        doc.setFontSize(11);
+        doc.text(`المريض: ${patient.name} | الرقم: ${patient.fileNumber}`, 105, 23, { align: "center" });
+        doc.setFontSize(9);
+        doc.text("تحليل تفاعلي للأدوية بناءً على حالة المريض", 105, 28, { align: "center" });
         
-        // Patient Info
+        // معلومات المريض
         doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.text(`Diagnosis: ${patient.diagnosis || 'Not specified'}`, 15, 35);
-        doc.text(`Age: ${patient.age || 'N/A'} | Room: ${patient.roomNumber || 'N/A'}`, 15, 40);
+        doc.setFontSize(11);
+        doc.text(`التشخيص: ${patient.diagnosis || 'غير محدد'}`, 15, 40);
+        doc.text(`العمر: ${patient.age || 'غير محدد'} | الغرفة: ${patient.roomNumber || 'غير محدد'}`, 15, 45);
         
-        // Medication Table
+        // جدول الأدوية
         if (medTable && medTable.headers && medTable.rows) {
             doc.autoTable({
-                startY: 45,
+                startY: 50,
                 head: [medTable.headers],
                 body: medTable.rows,
                 theme: 'grid',
                 headStyles: { 
-                    fillColor: [67, 78, 120], 
-                    fontSize: 9, 
-                    halign: 'center', 
+                    fillColor: [255, 107, 53], 
+                    fontSize: 10, 
+                    halign: 'right', 
                     textColor: [255, 255, 255],
                     fontStyle: 'bold'
                 },
                 styles: { 
-                    fontSize: 8,
-                    cellPadding: 3
+                    fontSize: 9,
+                    cellPadding: 4,
+                    textColor: [0, 0, 0],
+                    halign: 'right'
                 },
-                margin: { top: 45 },
+                margin: { top: 50 },
                 pageBreak: 'auto',
                 columnStyles: {
-                    0: { cellWidth: 40 }, // Medication name
-                    1: { cellWidth: 30 }, // Dosage
-                    2: { cellWidth: 30 }, // Frequency
-                    3: { cellWidth: 90 }  // Notes
+                    0: { cellWidth: 40 },
+                    1: { cellWidth: 30 },
+                    2: { cellWidth: 30 },
+                    3: { cellWidth: 90 }
                 }
             });
         }
         
-        const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : 60;
+        const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : 65;
         
-        // Clinical Notes
-        doc.setFontSize(10);
+        // ملاحظات سريرية
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.text("Clinical Notes:", 15, finalY);
+        doc.setTextColor(255, 107, 53);
+        doc.text("ملاحظات سريرية:", 15, finalY);
         doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
         
         const notes = [
-            "1. Administer medications as per prescribed schedule",
-            "2. Monitor for side effects and document accordingly",
-            "3. Verify patient identity before medication administration",
-            "4. Document any medication refusal or adverse reactions",
-            "5. Ensure proper storage and handling of medications"
+            "1. إعطاء الأدوية حسب الجدول المحدد",
+            "2. مراقبة الآثار الجانبية وتسجيلها",
+            "3. التحقق من هوية المريض قبل إعطاء الدواء",
+            "4. تسجيل أي رفض للدواء أو ردود فعل سلبية",
+            "5. التأكد من التخزين الصحيح للأدوية"
         ];
         
         notes.forEach((note, index) => {
             doc.text(note, 20, finalY + 5 + (index * 5));
         });
         
-        // Signature
+        // التوقيع
         const signatureY = finalY + 5 + (notes.length * 5) + 10;
-        doc.setFontSize(10);
-        doc.text(`Prepared by: ${signature}`, 15, signatureY);
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, signatureY + 5);
+        doc.setFontSize(11);
+        doc.text(`أعد بواسطة: ${signature}`, 15, signatureY);
+        doc.text(`التاريخ: ${new Date().toLocaleDateString('ar-EG')}`, 15, signatureY + 5);
         
-        // Footer
-        doc.setFontSize(7);
+        // التذييل
+        doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text("Nuraithm Smart Medication Management System", 105, 285, { align: "center" });
-        doc.text("AI-Powered Clinical Decision Support", 105, 288, { align: "center" });
+        doc.text("نظام نورعيظم لإدارة الأدوية الذكية", 105, 285, { align: "center" });
+        doc.text("نظام دعم القرار السريري المدعوم بالذكاء الاصطناعي", 105, 288, { align: "center" });
 
-        doc.save(`Medication_Analysis_${patient.fileNumber || 'UNKNOWN'}_${Date.now().toString().slice(-6)}.pdf`);
+        const fileName = `تحليل_أدوية_${patient.fileNumber || 'غير_محدد'}_${Date.now().toString().slice(-6)}.pdf`;
+        doc.save(fileName);
+        
+        return {
+            success: true,
+            fileName: fileName
+        };
     }
 
-    // Export Care Plan PDF
+    // تصدير خطة الرعاية
     function exportCarePlanPDF(patient, carePlan, signature = "Nurse. Ahmed Khaled") {
         if (typeof jspdf === 'undefined') {
             console.error('jsPDF not loaded');
-            alert('PDF library not loaded. Please check your internet connection.');
+            alert('مكتبة PDF غير محملة. يرجى التحقق من اتصال الإنترنت.');
             return;
         }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         
-        // Header
-        doc.setFillColor(67, 78, 120);
-        doc.rect(0, 0, 210, 25, 'F');
+        // الرأس
+        doc.setFillColor(255, 107, 53);
+        doc.rect(0, 0, 210, 30, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(18);
+        doc.setFontSize(20);
         doc.setFont('helvetica', 'bold');
-        doc.text("NURSING CARE PLAN", 105, 14, { align: "center" });
-        doc.setFontSize(10);
-        doc.text(`Patient: ${patient.name} | MRN: ${patient.fileNumber}`, 105, 20, { align: "center" });
+        doc.text("خطة الرعاية التمريضية", 105, 16, { align: "center" });
+        doc.setFontSize(11);
+        doc.text(`المريض: ${patient.name} | الرقم: ${patient.fileNumber}`, 105, 23, { align: "center" });
+        doc.setFontSize(9);
+        doc.text("بناءً على معايير NANDA-I والممارسة القائمة على الأدلة", 105, 28, { align: "center" });
         
-        // Patient Info
+        // معلومات المريض
         doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.text(`Diagnosis: ${patient.diagnosis || 'Not specified'}`, 15, 35);
-        doc.text(`Age: ${patient.age || 'N/A'} | Room: ${patient.roomNumber || 'N/A'} | Admission: ${patient.isbar?.identification?.admission_date || 'N/A'}`, 15, 40);
+        doc.setFontSize(11);
+        doc.text(`التشخيص: ${patient.diagnosis || 'غير محدد'}`, 15, 40);
+        doc.text(`العمر: ${patient.age || 'غير محدد'} | الغرفة: ${patient.roomNumber || 'غير محدد'} | القبول: ${patient.isbar?.identification?.admission_date || 'غير محدد'}`, 15, 45);
         
-        // Care Plan Table
+        // جدول خطة الرعاية
         if (carePlan && carePlan.headers && carePlan.rows) {
             doc.autoTable({
-                startY: 45,
+                startY: 50,
                 head: [carePlan.headers],
                 body: carePlan.rows,
                 theme: 'grid',
                 headStyles: { 
-                    fillColor: [67, 78, 120], 
-                    fontSize: 9, 
-                    halign: 'center', 
+                    fillColor: [255, 107, 53], 
+                    fontSize: 10, 
+                    halign: 'right', 
                     textColor: [255, 255, 255],
                     fontStyle: 'bold'
                 },
                 styles: { 
-                    fontSize: 8,
-                    cellPadding: 3,
-                    overflow: 'linebreak'
+                    fontSize: 9,
+                    cellPadding: 4,
+                    overflow: 'linebreak',
+                    textColor: [0, 0, 0],
+                    halign: 'right'
                 },
-                margin: { top: 45 },
+                margin: { top: 50 },
                 pageBreak: 'auto',
                 columnStyles: {
-                    0: { cellWidth: 45 }, // Diagnosis
-                    1: { cellWidth: 40 }, // Goals
-                    2: { cellWidth: 60 }, // Interventions
-                    3: { cellWidth: 45 }  // Evaluation
+                    0: { cellWidth: 45 },
+                    1: { cellWidth: 40 },
+                    2: { cellWidth: 60 },
+                    3: { cellWidth: 45 }
                 }
             });
         }
         
-        const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : 60;
+        const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : 65;
         
-        // Nursing Notes
-        doc.setFontSize(10);
+        // ملاحظات التمريض
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.text("Nursing Implementation Notes:", 15, finalY);
+        doc.setTextColor(255, 107, 53);
+        doc.text("ملاحظات التنفيذ التمريضي:", 15, finalY);
         doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
         
         const nursingNotes = [
-            "1. Implement care plan interventions as scheduled",
-            "2. Document patient responses to interventions",
-            "3. Reevaluate care plan goals regularly",
-            "4. Communicate changes in patient status to healthcare team",
-            "5. Provide patient and family education as appropriate"
+            "1. تنفيذ تدخلات خطة الرعاية حسب الجدول",
+            "2. توثيق استجابات المريض للتدخلات",
+            "3. إعادة تقييم أهداف خطة الرعاية بانتظام",
+            "4. التواصل مع فريق الرعاية الصحية حول تغيرات حالة المريض",
+            "5. تثقيف المريض والعائلة حسب الحاجة"
         ];
         
         nursingNotes.forEach((note, index) => {
             doc.text(note, 20, finalY + 5 + (index * 5));
         });
         
-        // Signature
+        // التوقيع
         const signatureY = finalY + 5 + (nursingNotes.length * 5) + 10;
-        doc.setFontSize(10);
-        doc.text(`Care Plan Prepared by: ${signature}`, 15, signatureY);
-        doc.text(`Date: ${new Date().toLocaleDateString()} | Time: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, 15, signatureY + 5);
+        doc.setFontSize(11);
+        doc.text(`أعدت بواسطة: ${signature}`, 15, signatureY);
+        doc.text(`التاريخ: ${new Date().toLocaleDateString('ar-EG')} | الوقت: ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`, 15, signatureY + 5);
         
-        // Review Schedule
-        doc.text("Next Care Plan Review: ___________________", 15, signatureY + 15);
+        // جدول المراجعة
+        doc.text("موعد المراجعة القادمة: ___________________", 15, signatureY + 15);
         
-        // Footer
-        doc.setFontSize(7);
+        // التذييل
+        doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text("Nuraithm Nursing Care Planning System - NANDA-I Based", 105, 285, { align: "center" });
-        doc.text("Evidence-Based Practice Guidelines Incorporated", 105, 288, { align: "center" });
+        doc.text("نظام نورعيظم للتخطيط التمريضي - معتمد على معايير NANDA-I", 105, 285, { align: "center" });
+        doc.text("إرشادات الممارسة القائمة على الأدلة", 105, 288, { align: "center" });
 
-        doc.save(`Care_Plan_${patient.fileNumber || 'UNKNOWN'}_${new Date().toISOString().split('T')[0]}.pdf`);
+        const fileName = `خطة_رعاية_${patient.fileNumber || 'غير_محدد'}_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(fileName);
+        
+        return {
+            success: true,
+            fileName: fileName
+        };
     }
 
-    // Export Shift Report PDF
-    function exportShiftReportPDF(patient, shiftReport, signature = "Nurse. Ahmed Khaled") {
+    // تصدير تقرير الشفت
+    function exportShiftReportPDF(patient, shiftReport, signature = "Nurse. Ahmed Khaled", receivingNurse = "___________________") {
         if (typeof jspdf === 'undefined') {
             console.error('jsPDF not loaded');
-            alert('PDF library not loaded. Please check your internet connection.');
+            alert('مكتبة PDF غير محملة. يرجى التحقق من اتصال الإنترنت.');
             return;
         }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         
-        // Header
-        doc.setFillColor(67, 78, 120);
-        doc.rect(0, 0, 210, 25, 'F');
+        // الرأس
+        doc.setFillColor(255, 107, 53);
+        doc.rect(0, 0, 210, 30, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(18);
+        doc.setFontSize(20);
         doc.setFont('helvetica', 'bold');
-        doc.text("NURSING SHIFT REPORT", 105, 14, { align: "center" });
-        doc.setFontSize(10);
-        doc.text(`Patient: ${patient.name} | Shift: ${new Date().toLocaleDateString()}`, 105, 20, { align: "center" });
-        
-        // Shift Information
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.text(`MRN: ${patient.fileNumber} | Room: ${patient.roomNumber} | Diagnosis: ${patient.diagnosis || 'Not specified'}`, 15, 35);
-        
-        // Shift Report Content
+        doc.text("تقرير الشفت التمريضي", 105, 16, { align: "center" });
         doc.setFontSize(11);
+        doc.text(`المريض: ${patient.name} | الشفت: ${new Date().toLocaleDateString('ar-EG')}`, 105, 23, { align: "center" });
+        doc.setFontSize(9);
+        doc.text("نظام SBAR للتواصل السريري", 105, 28, { align: "center" });
+        
+        // معلومات الشفت
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(11);
+        doc.text(`الرقم: ${patient.fileNumber} | الغرفة: ${patient.roomNumber} | التشخيص: ${patient.diagnosis || 'غير محدد'}`, 15, 40);
+        
+        // محتوى تقرير الشفت
+        doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text("Shift Summary:", 15, 45);
+        doc.text("ملخص الشفت:", 15, 50);
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         
-        const splitText = doc.splitTextToSize(shiftReport || 'No shift report available.', 180);
-        doc.text(splitText, 15, 50);
+        const splitText = doc.splitTextToSize(shiftReport || 'لا يوجد تقرير شفت متاح.', 180);
+        doc.text(splitText, 15, 55);
         
-        // Recent Events
-        const eventsY = 50 + (splitText.length * 5) + 10;
+        // الأحداث الأخيرة
+        const eventsY = 55 + (splitText.length * 5) + 10;
         if (patient.isbar?.shift_notes && patient.isbar.shift_notes.length > 0) {
-            doc.setFontSize(11);
+            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text("Recent Clinical Events:", 15, eventsY);
+            doc.text("الأحداث السريرية الأخيرة:", 15, eventsY);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
+            doc.setFontSize(10);
             
             patient.isbar.shift_notes.slice(0, 5).forEach((event, index) => {
                 const yPos = eventsY + 5 + (index * 5);
-                if (yPos < 250) { // Avoid going off page
+                if (yPos < 250) {
                     doc.text(`${event.time}: ${event.event}`, 20, yPos);
                 }
             });
         }
         
-        // Vital Signs
+        // العلامات الحيوية
         const vitalsY = eventsY + (patient.isbar?.shift_notes?.length > 0 ? 5 + (Math.min(5, patient.isbar.shift_notes.length) * 5) : 0) + 10;
         if (patient.isbar?.assessment?.vitals) {
-            doc.setFontSize(11);
+            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text("Vital Signs Summary:", 15, vitalsY);
+            doc.text("ملخص العلامات الحيوية:", 15, vitalsY);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
+            doc.setFontSize(10);
             doc.text(patient.isbar.assessment.vitals, 20, vitalsY + 5);
         }
         
-        // Signature Section
+        // قسم التوقيعات
         const signatureY = Math.min(vitalsY + 20, 260);
         doc.setDrawColor(200, 200, 200);
         doc.line(15, signatureY - 5, 195, signatureY - 5);
         
-        doc.setFontSize(10);
-        doc.text(`Shift: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, 15, signatureY);
-        doc.text(`Reporting Nurse: ${signature}`, 15, signatureY + 10);
-        doc.text("Receiving Nurse: ___________________", 15, signatureY + 20);
+        doc.setFontSize(11);
+        doc.text(`وقت الشفت: ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`, 15, signatureY);
+        doc.text(`الممرض/الممرضة المسلمة: ${signature}`, 15, signatureY + 10);
+        doc.text(`الممرض/الممرضة المستقبلة: ${receivingNurse}`, 15, signatureY + 20);
         
-        // Footer
-        doc.setFontSize(7);
+        // التذييل
+        doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text("Nuraithm Shift Reporting System - SBAR Communication Format", 105, 285, { align: "center" });
-        doc.text("Timely and Accurate Clinical Communication", 105, 288, { align: "center" });
+        doc.text("نظام نورعيظم لتقارير الشفت - نظام التواصل SBAR", 105, 285, { align: "center" });
+        doc.text("تواصل سريري دقيق وفي الوقت المناسب", 105, 288, { align: "center" });
 
-        doc.save(`Shift_Report_${patient.fileNumber || 'UNKNOWN'}_${Date.now().toString().slice(-6)}.pdf`);
+        const fileName = `تقرير_شفت_${patient.fileNumber || 'غير_محدد'}_${Date.now().toString().slice(-6)}.pdf`;
+        doc.save(fileName);
+        
+        return {
+            success: true,
+            fileName: fileName
+        };
     }
 
-    // Export Patient Summary
+    // تصدير ملخص المريض
     function exportPatientSummary(patient) {
         const content = `
-PATIENT SUMMARY REPORT
-======================
+ملخص حالة المريض
+================
 
-Patient Information:
+معلومات المريض:
 --------------------
-Name: ${patient.name}
-MRN: ${patient.fileNumber}
-Age: ${patient.age}
-Room: ${patient.roomNumber}
-Status: ${patient.status}
-Admission Date: ${patient.isbar?.identification?.admission_date || 'N/A'}
+الاسم: ${patient.name}
+الرقم الطبي: ${patient.fileNumber}
+العمر: ${patient.age}
+الغرفة: ${patient.roomNumber}
+الحالة: ${patient.status === 'active' ? 'نشط' : 'مسلم'}
+تاريخ القبول: ${patient.isbar?.identification?.admission_date || 'غير محدد'}
 
-Clinical Information:
+معلومات سريرية:
 ---------------------
-Diagnosis: ${patient.diagnosis}
-Consultant: ${patient.isbar?.identification?.consultant || 'N/A'}
-Allergies: ${patient.isbar?.background?.allergy || 'None'}
-Isolation: ${patient.isbar?.background?.infections_isolation || 'None'}
+التشخيص: ${patient.diagnosis}
+الطبيب المعالج: ${patient.isbar?.identification?.consultant || 'غير محدد'}
+الحساسيات: ${patient.isbar?.background?.allergy || 'لا يوجد'}
+العزل: ${patient.isbar?.background?.infections_isolation || 'لا يوجد'}
 
-Current Medications (${patient.medications?.length || 0}):
+الأدوية الحالية (${patient.medications?.length || 0}):
 ---------------------
 ${(patient.medications || []).map(med => `• ${med.name} - ${med.dosage} (${med.frequency})`).join('\n')}
 
-Recent Clinical Events:
+الأحداث السريرية الأخيرة:
 -----------------------
 ${(patient.isbar?.shift_notes || []).slice(0, 5).map(note => `• ${note.time}: ${note.event}`).join('\n')}
 
-Pending Tasks (${patient.todos?.filter(t => !t.completed).length || 0}):
+المهام المعلقة (${patient.todos?.filter(t => !t.completed).length || 0}):
 -----------------
 ${(patient.todos?.filter(t => !t.completed) || []).map(todo => `• ${todo.text}`).join('\n')}
 
-Assessment Summary:
+ملخص التقييم:
 -------------------
-GCS: ${patient.isbar?.assessment?.gcs || '15'}
-Fall Risk: ${patient.isbar?.assessment?.fall_risk || 'N/A'}
-Vital Signs: ${patient.isbar?.assessment?.vitals || 'N/A'}
+مقياس غلاسكو: ${patient.isbar?.assessment?.gcs || '15'}
+خطر السقوط: ${patient.isbar?.assessment?.fall_risk || 'منخفض'}
+العلامات الحيوية: ${patient.isbar?.assessment?.vitals || 'غير محدد'}
 
-Plan of Care:
+خطة الرعاية:
 -------------
-${patient.isbar?.recommendations?.plan_of_care || 'Continue current management'}
+${patient.isbar?.recommendations?.plan_of_care || 'استمرار الإدارة الحالية'}
 
-Generated by Nuraithm Clinical System
-${new Date().toLocaleString()}
-Version: 2.0.0
+تم الإنشاء بواسطة نظام نورعيظم السريري
+${new Date().toLocaleString('ar-EG')}
+الإصدار: 2.0.0
         `;
 
-        Utils.downloadFile(content, `Patient_Summary_${patient.fileNumber || 'UNKNOWN'}.txt`, 'text/plain');
+        downloadFile(content, `ملخص_${patient.fileNumber || 'غير_محدد'}.txt`, 'text/plain');
+        
+        return {
+            success: true,
+            fileName: `ملخص_${patient.fileNumber || 'غير_محدد'}.txt`
+        };
     }
 
-    // Export Data as CSV
+    // تصدير البيانات كـ CSV
     function exportAsCSV(data, fileName) {
         if (!data || data.length === 0) {
             console.error('No data to export');
@@ -722,42 +909,28 @@ Version: 2.0.0
         ];
 
         const csvString = csvRows.join('\n');
-        Utils.downloadFile(csvString, `${fileName}.csv`, 'text/csv');
-    }
-
-    // Export All Patient Data
-    function exportAllPatientData(patient) {
-        const data = {
-            patient: {
-                basicInfo: {
-                    name: patient.name,
-                    fileNumber: patient.fileNumber,
-                    age: patient.age,
-                    roomNumber: patient.roomNumber,
-                    diagnosis: patient.diagnosis,
-                    status: patient.status,
-                    createdAt: patient.createdAt,
-                    updatedAt: patient.updatedAt
-                },
-                isbar: patient.isbar || {},
-                medications: patient.medications || [],
-                todos: patient.todos || [],
-                labs: patient.labs || [],
-                radiology: patient.radiology || [],
-                reports: patient.reports || []
-            },
-            exportInfo: {
-                exportedAt: new Date().toISOString(),
-                exportedBy: "Nuraithm System",
-                version: "2.0.0"
-            }
+        downloadFile(csvString, `${fileName}.csv`, 'text/csv');
+        
+        return {
+            success: true,
+            fileName: `${fileName}.csv`
         };
-
-        const jsonString = JSON.stringify(data, null, 2);
-        Utils.downloadFile(jsonString, `Patient_Data_${patient.fileNumber || 'UNKNOWN'}_Full.json`, 'application/json');
     }
 
-    // Public API
+    // دالة مساعدة لتحميل الملفات
+    function downloadFile(content, fileName, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // API العامة
     return {
         exportHandoverPDF,
         exportReportPDF,
@@ -765,10 +938,8 @@ Version: 2.0.0
         exportCarePlanPDF,
         exportShiftReportPDF,
         exportPatientSummary,
-        exportAllPatientData,
         exportAsCSV
     };
 })();
 
-// Make PDF export globally available
 window.PDFExport = PDFExport;
